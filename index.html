@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>G2Construction Commission Calculator</title>
+<title>G2 Construction Commission Tracking</title>
 <style>
 :root{
   --accent:#0077b6;
@@ -40,11 +40,13 @@ header{
 }
 .logo{
   width:56px;height:56px;border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),#0ea5e9);
-  display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
-  font-size:18px;box-shadow:0 6px 18px rgba(2,6,23,0.12);
+  background:linear-gradient(135deg,#ffffff,#ffffff);
+  display:flex;align-items:center;justify-content:center;font-weight:700;
+  font-size:22px;box-shadow:0 6px 18px rgba(2,6,23,0.12);
 }
-h1{margin:0;font-size:20px;}
+.logo span.g{color:black;}
+.logo span.n2{color:#0077b6;}
+h1{margin:0;font-size:22px;font-weight:700;}
 p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
 .grid{
   display:grid;
@@ -85,9 +87,9 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
 <body>
 <div class="container">
 <header>
-  <div class="logo" aria-hidden="true">G2</div>
+  <div class="logo" aria-hidden="true"><span class="g">G</span><span class="n2">2</span></div>
   <div>
-    <h1>G2Construction Commission Calculator</h1>
+    <h1><span style="color:black;">G</span><span style="color:#0077b6;">2</span> Construction Commission Tracking</h1>
     <p class="lead">Earn 40% of profit over 18% of sale. Enter sale, cost, and job name — results update live.</p>
   </div>
 </header>
@@ -202,7 +204,7 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
     outCommission.textContent = '$' + money(r.commission);
   }
 
-  const STORAGE_KEY = 'g2_commission_history_v5';
+  const STORAGE_KEY = 'g2_commission_history_v6';
   function loadHistory(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return [];} }
   function saveHistory(arr){ localStorage.setItem(STORAGE_KEY,JSON.stringify(arr)); renderHistory(); }
 
@@ -309,11 +311,4 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
   document.getElementById('sortHigh').addEventListener('click', ()=>{ sortMode='high'; renderHistory(); });
   document.getElementById('sortLow').addEventListener('click', ()=>{ sortMode='low'; renderHistory(); });
 
-  document.getElementById('aboutLink').addEventListener('click', e=>{ e.preventDefault(); alert('G2Construction Commission Calculator\nFormula: commission = 0.40 × max(0, (sale - cost) - 0.18 × sale)\nLocal history stored in browser.\nEdit jobs to update inputs.\nSearch and sort history as needed.'); });
-
-  renderHistory();
-  updateAll();
-})();
-</script>
-</body>
-</html>
+  document.getElementById('aboutLink').addEventListener('click', e=>{ e.preventDefault(); alert('G2 Construction Commission Tracking\nFormula: commission = 0.40 × max(0, (sale - cost) - 0.18 × sale)\nLocal
