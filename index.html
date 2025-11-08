@@ -212,9 +212,19 @@ function renderHistory(){
   jobs.forEach(j=>{
     const d=document.createElement('div'); d.className='history-item';
     const canEdit=(!isSupervisor && profile===profileSelect.value) || (isSupervisor && j._owner===profileSelect.value);
-    let buttons='';
-    if(canEdit) buttons=`<button class="edit-btn" onclick="editJob('${j.id}')">Edit</button><button class="delete-btn" onclick="deleteJob('${j.id}')">Delete</button>`;
-    d.innerHTML=`<div><b>${j.jobName}</b>${isSupervisor?` | Owner: ${j._owner}`:''}<br>Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)}</div><div>${money(j.commission)} ${buttons}</div>`;
+   d.innerHTML=`<div><b>${j.jobName}</b>${isSupervisor?` | Owner: ${j._owner}`:''}<br>Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)}</div><div>${money(j.commission)}</div>`;
+if(canEdit){
+    const btnEdit = document.createElement('button');
+    btnEdit.textContent='Edit';
+    btnEdit.className='edit-btn';
+    btnEdit.addEventListener('click',()=>{ editJob(j.id); });
+    const btnDel = document.createElement('button');
+    btnDel.textContent='Delete';
+    btnDel.className='delete-btn';
+    btnDel.addEventListener('click',()=>{ deleteJob(j.id); });
+    d.lastChild.appendChild(btnEdit);
+    d.lastChild.appendChild(btnDel);
+}
     historyEl.appendChild(d);
   });
   updateTotals();
