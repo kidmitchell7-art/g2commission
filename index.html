@@ -92,7 +92,7 @@
 
   // Save job
   document.getElementById('saveBtn').addEventListener('click', async () => {
-    const profile = profileSelect.value.trim(); // ensure exact match
+    const profile = profileSelect.value.trim(); // ensures exact match
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
@@ -143,34 +143,39 @@
     const profile = profileSelect.value.trim();
     historyEl.innerHTML = "Loading...";
     try {
-      const snapshot = await db.collection("jobs").orderBy("created", "desc").get();
+      let query = db.collection("jobs").orderBy("created","desc");
+
+      // Only filter in Firestore if NOT Sam
+      if(profile !== "Sam") {
+        query = query.where("profile","==",profile);
+      }
+
+      const snapshot = await query.get();
       historyEl.innerHTML = "";
+
       snapshot.forEach(doc => {
         const j = doc.data();
         j.id = doc.id;
 
-        // Debugging log
-        console.log("Loading job:", j.jobName, "Profile:", j.profile);
-
-        if (profile === "Sam" || j.profile.toLowerCase() === profile.toLowerCase()) {
-          const div = document.createElement('div');
-          div.innerHTML = `
-            <div>
-              <b>${j.jobName}</b> (${j.profile})<br>
-              Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
-            </div>
-            <div>
-              <button class="edit-btn">Edit</button>
-              <button class="delete-btn">Delete</button>
-            </div>
-          `;
-          const [editBtn, delBtn] = div.querySelectorAll('button');
-          editBtn.addEventListener('click', () => editJob(doc.id, j));
-          delBtn.addEventListener('click', () => deleteJob(doc.id));
-          historyEl.appendChild(div);
-        }
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <div>
+            <b>${j.jobName}</b> (${j.profile})<br>
+            Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+          </div>
+          <div>
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          </div>
+        `;
+        const [editBtn, delBtn] = div.querySelectorAll('button');
+        editBtn.addEventListener('click', () => editJob(doc.id, j));
+        delBtn.addEventListener('click', () => deleteJob(doc.id));
+        historyEl.appendChild(div);
       });
+
       if(historyEl.innerHTML === "") historyEl.innerHTML = "No jobs yet.";
+
     } catch(err) {
       console.error(err);
       historyEl.innerHTML = "Error loading jobs.";
