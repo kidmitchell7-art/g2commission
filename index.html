@@ -125,7 +125,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     }catch(err){console.error(err); alert("Error saving job.");}
 });
 
-// Load jobs
+// Load jobs with totals
 async function loadJobs(){
     historyEl.innerHTML="Loading...";
     try{
@@ -140,6 +140,7 @@ async function loadJobs(){
 
         let totalSales = 0;
         let totalCommission = 0;
+        let totalProfit = 0;
 
         snapshot.forEach(doc=>{
             const j = doc.data(); 
@@ -152,10 +153,12 @@ async function loadJobs(){
 
             totalSales += j.sale;
             totalCommission += j.commission;
+            totalProfit += j.profit;
 
             const div = document.createElement('div');
-            div.innerHTML = `<div><b>${j.jobName}</b> (${j.profile})<br>Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}</div>
-            <div><button class="edit-btn">Edit</button><button class="delete-btn">Delete</button></div>`;
+            div.innerHTML = `<div><b>${j.jobName}</b> (${j.profile})<br>
+                Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}</div>
+                <div><button class="edit-btn">Edit</button><button class="delete-btn">Delete</button></div>`;
             const [editBtn, delBtn] = div.querySelectorAll('button');
             editBtn.addEventListener('click', ()=>{
                 editingJobId=doc.id;
@@ -172,11 +175,12 @@ async function loadJobs(){
             historyEl.appendChild(div);
         });
 
-        // Add totals summary
+        // Totals summary
         const totalsDiv = document.createElement('div');
         totalsDiv.style.fontWeight = 'bold';
         totalsDiv.style.marginTop = '10px';
-        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)}`;
+        const profitAfterCommission = totalProfit - totalCommission;
+        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${profitAfterCommission.toFixed(2)}`;
         historyEl.appendChild(totalsDiv);
 
     }catch(err){
@@ -195,7 +199,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const profileFilterVal = filterProfile.value;
 
     let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
-    let totalSales=0, totalCommission=0;
+    let totalSales=0, totalCommission=0, totalProfit=0;
 
     snapshot.forEach(doc=>{
         const j = doc.data();
@@ -203,10 +207,13 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
         if(profileFilterVal && j.profile!==profileFilterVal) return;
         csv+=`"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
         totalSales += j.sale;
+        totalProfit += j.profit;
         totalCommission += j.commission;
     });
 
-    csv += `Totals,,${totalSales.toFixed(2)},,, ,${totalCommission.toFixed(2)}\n`;
+    const profitAfterCommission = totalProfit - totalCommission;
+    csv += `Totals,,${totalSales.toFixed(2)},,${totalProfit.toFixed(2)},,${totalCommission.toFixed(2)}\n`;
+    csv += `Profit After Commission,,,,,,${profitAfterCommission.toFixed(2)}\n`;
 
     const blob = new Blob([csv], {type:"text/csv"});
     const url = URL.createObjectURL(blob);
