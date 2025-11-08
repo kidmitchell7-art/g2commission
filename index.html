@@ -5,166 +5,163 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>G2Construction Commission Calculator</title>
 <style>
-  :root{
-    --accent:#0077b6;
-    --muted:#6b7280;
-    --bg:#f6f9fc;
-    --card:#ffffff;
-    --success:#16a34a;
-  }
-  html,body{height:100%}
-  body{
-    margin:0;
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-    background:linear-gradient(180deg,#e9f2fb 0%,var(--bg) 100%);
-    color:#0f172a;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:28px;
-  }
-  .container{
-    width:100%;
-    max-width:920px;
-    background:var(--card);
-    border-radius:14px;
-    box-shadow:0 8px 30px rgba(15,23,42,0.08);
-    padding:22px;
-  }
-  header{
-    display:flex;
-    gap:16px;
-    align-items:center;
-    margin-bottom:8px;
-  }
-  .logo{
-    width:56px;height:56px;border-radius:10px;
-    background:linear-gradient(135deg,var(--accent),#0ea5e9);
-    display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
-    font-size:18px;box-shadow:0 6px 18px rgba(2,6,23,0.12);
-  }
-  h1{
-    margin:0;font-size:20px;
-  }
-  p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-top:18px;
-  }
-  @media (max-width:720px){ .grid{grid-template-columns:1fr} }
-  .card{
-    background:linear-gradient(180deg,rgba(255,255,255,0.85),var(--card));
-    border-radius:10px;padding:16px;border:1px solid rgba(15,23,42,0.03);
-  }
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input[type="number"]{
-    width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6eef6;background:#fbfdff;
-    font-size:16px;box-sizing:border-box;
-  }
-  .small-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-  button{
-    background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:8px;font-weight:600;
-    cursor:pointer;
-  }
-  button.ghost{background:transparent;border:1px solid rgba(2,6,23,0.06);color:var(--muted);font-weight:600}
-  .results{display:flex;flex-direction:column;gap:10px}
-  .result-line{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03)}
-  .muted{color:var(--muted);font-size:13px}
-  .big{font-size:18px;font-weight:700}
-  .green{color:var(--success)}
-  .examples{display:flex;gap:8px;flex-wrap:wrap}
-  .examples button{background:#eef6ff;color:var(--accent);border:1px solid rgba(2,6,23,0.03);font-weight:600}
-  .history-list{max-height:200px;overflow:auto;margin-top:10px;border-radius:8px;padding:8px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03)}
-  .history-item{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:6px;background:linear-gradient(180deg,#fff,#fbfdff)}
-  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .note{font-size:12px;color:var(--muted)}
-  a.small{font-size:13px;color:var(--accent);text-decoration:none}
+:root{
+  --accent:#0077b6;
+  --muted:#6b7280;
+  --bg:#f6f9fc;
+  --card:#ffffff;
+  --success:#16a34a;
+  --danger:#dc2626;
+}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  background:linear-gradient(180deg,#e9f2fb 0%,var(--bg) 100%);
+  color:#0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.container{
+  width:100%;
+  max-width:920px;
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:0 8px 30px rgba(15,23,42,0.08);
+  padding:20px;
+}
+header{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.logo{
+  width:56px;height:56px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#0ea5e9);
+  display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+  font-size:18px;box-shadow:0 6px 18px rgba(2,6,23,0.12);
+}
+h1{margin:0;font-size:20px;}
+p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:18px;
+}
+@media (max-width:720px){ .grid{grid-template-columns:1fr} }
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.85),var(--card));
+  border-radius:10px;padding:16px;border:1px solid rgba(15,23,42,0.03);
+}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input[type="number"], input[type="text"]{
+  width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6eef6;background:#fbfdff;
+  font-size:16px;box-sizing:border-box;
+  margin-bottom:12px;
+}
+.small-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+button{
+  background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:8px;font-weight:600;
+  cursor:pointer;
+}
+button.ghost{background:transparent;border:1px solid rgba(2,6,23,0.06);color:var(--muted);font-weight:600}
+.results{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.result-line{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03)}
+.muted{color:var(--muted);font-size:13px}
+.big{font-size:18px;font-weight:700}
+.green{color:var(--success)}
+.red{color:var(--danger)}
+.history-list{max-height:250px;overflow:auto;margin-top:10px;border-radius:8px;padding:8px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03)}
+.history-item{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:6px;background:linear-gradient(180deg,#fff,#fbfdff)}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.note{font-size:12px;color:var(--muted)}
+a.small{font-size:13px;color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
-  <div class="container" role="main" aria-labelledby="title">
-    <header>
-      <div class="logo" aria-hidden="true">G2</div>
-      <div>
-        <h1 id="title">G2construction Commission Calculator</h1>
-        <p class="lead">You earn <strong>40%</strong> of profit over <strong>18%</strong> of sale price. Enter sale & cost — results update live.</p>
-      </div>
-    </header>
+<div class="container">
+<header>
+  <div class="logo" aria-hidden="true">G2</div>
+  <div>
+    <h1>G2Construction Commission Calculator</h1>
+    <p class="lead">Earn 40% of profit over 18% of sale. Enter sale, cost, and job name — results update live.</p>
+  </div>
+</header>
 
-    <div class="grid" role="region" aria-label="Calculator area">
-      <div class="card" aria-live="polite">
-        <label for="sale">Sale price (total job)</label>
-        <input id="sale" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 28706" value="28706" />
+<div class="grid">
+  <div class="card">
+    <label for="jobName">Job Name (optional)</label>
+    <input id="jobName" type="text" placeholder="e.g. Smith Residence" />
 
-        <label for="cost" style="margin-top:12px">Cost (your cost)</label>
-        <input id="cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 20000" value="20000" />
+    <label for="sale">Sale price (total job)</label>
+    <input id="sale" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 28706" value="28706" />
 
-        <div class="small-row" style="margin-top:12px;">
-          <button id="calcBtn" type="button">Recalculate</button>
-          <button id="saveBtn" class="ghost" type="button">Save to History</button>
-          <button id="clearHistory" class="ghost" type="button">Clear History</button>
-        </div>
+    <label for="cost">Cost (your cost)</label>
+    <input id="cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 20000" value="20000" />
 
-        <div style="margin-top:14px;">
-          <div class="muted" style="margin-bottom:6px">Quick examples</div>
-          <div class="examples">
-            <button type="button" data-sale="28706" data-cost="20000">28706 / 20000</button>
-            <button type="button" data-sale="163410" data-cost="127500">163410 / 127500</button>
-            <button type="button" data-sale="3550" data-cost="1200">3550 / 1200</button>
-          </div>
-        </div>
-
-        <div style="margin-top:14px;">
-          <div class="muted" style="margin-bottom:6px">Settings</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <div class="small-row"><label class="muted">Base %</label><div class="muted">18%</div></div>
-            <div class="small-row"><label class="muted">Commission rate</label><div class="muted">40%</div></div>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="results" aria-live="polite">
-          <div class="result-line"><div class="muted">Sale price</div><div id="outSale" class="big">$28,706.00</div></div>
-          <div class="result-line"><div class="muted">Cost</div><div id="outCost" class="big">$20,000.00</div></div>
-          <div class="result-line"><div class="muted">Gross profit (sale - cost)</div><div id="outProfit" class="big">$8,706.00</div></div>
-          <div class="result-line"><div class="muted">18% threshold (sale × 0.18)</div><div id="outBase" class="big">$5,167.08</div></div>
-          <div class="result-line"><div class="muted">Eligible profit (profit − threshold)</div><div id="outEligible" class="big">$3,538.92</div></div>
-          <div class="result-line"><div class="muted">Commission (40% of eligible)</div><div id="outCommission" class="big green">$1,415.57</div></div>
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
-          <button id="copyBtn" class="ghost" type="button">Copy Commission</button>
-          <button id="exportBtn" type="button">Export CSV</button>
-          <button id="resetBtn" class="ghost" type="button">Reset Inputs</button>
-        </div>
-
-        <div style="margin-top:12px;">
-          <div class="muted">Calculation history (saved locally)</div>
-          <div id="history" class="history-list" aria-live="polite"></div>
-        </div>
-
-      </div>
+    <div class="small-row">
+      <button id="calcBtn" type="button">Recalculate</button>
+      <button id="saveBtn" class="ghost" type="button">Save to History</button>
+      <button id="clearHistory" class="ghost" type="button">Clear History</button>
     </div>
 
-    <div class="foot">
-      <div class="note">Formula used: commission = 40% × max(0, (sale - cost) - 0.18 × sale)</div>
-      <div><a class="small" href="#" id="aboutLink">About</a></div>
+    <div style="margin-top:14px;">
+      <div class="muted" style="margin-bottom:6px">Quick examples</div>
+      <div class="small-row">
+        <button type="button" data-sale="28706" data-cost="20000">28706 / 20000</button>
+        <button type="button" data-sale="163410" data-cost="127500">163410 / 127500</button>
+        <button type="button" data-sale="3550" data-cost="1200">3550 / 1200</button>
+      </div>
     </div>
   </div>
 
+  <div class="card">
+    <div class="results" aria-live="polite">
+      <div class="result-line"><div class="muted">Sale price</div><div id="outSale" class="big">$28,706.00</div></div>
+      <div class="result-line"><div class="muted">Cost</div><div id="outCost" class="big">$20,000.00</div></div>
+      <div class="result-line"><div class="muted">Gross profit</div><div id="outProfit" class="big">$8,706.00</div></div>
+      <div class="result-line"><div class="muted">18% threshold</div><div id="outBase" class="big">$5,167.08</div></div>
+      <div class="result-line"><div class="muted">Eligible profit</div><div id="outEligible" class="big">$3,538.92</div></div>
+      <div class="result-line"><div class="muted">Commission (40%)</div><div id="outCommission" class="big green">$1,415.57</div></div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <button id="copyBtn" class="ghost" type="button">Copy Commission</button>
+      <button id="exportBtn" type="button">Export CSV</button>
+      <button id="resetBtn" class="ghost" type="button">Reset Inputs</button>
+    </div>
+
+    <div style="margin-top:12px;">
+      <div class="muted" style="margin-bottom:4px">Saved History</div>
+      <input id="searchHistory" type="text" placeholder="Search by job name..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e6eef6;margin-bottom:6px;" />
+      <div class="small-row" style="margin-bottom:6px;gap:6px;">
+        <button id="sortRecent" type="button">Sort: Recent</button>
+        <button id="sortHigh" type="button">Sort: High Commission</button>
+        <button id="sortLow" type="button">Sort: Low Commission</button>
+      </div>
+      <div id="history" class="history-list"></div>
+      <div class="muted" id="stats"></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="note">Formula: commission = 40% × max(0, (sale - cost) - 18% × sale)</div>
+  <div><a class="small" href="#" id="aboutLink">About</a></div>
+</div>
+
 <script>
 (function(){
-  // Settings (change if needed)
   const BASE_PCT = 0.18;
   const COMM_PCT = 0.40;
 
-  // Elements
   const saleEl = document.getElementById('sale');
   const costEl = document.getElementById('cost');
+  const jobEl = document.getElementById('jobName');
   const outSale = document.getElementById('outSale');
   const outCost = document.getElementById('outCost');
   const outProfit = document.getElementById('outProfit');
@@ -175,12 +172,15 @@
   const copyBtn = document.getElementById('copyBtn');
   const exportBtn = document.getElementById('exportBtn');
   const saveBtn = document.getElementById('saveBtn');
+  const resetBtn = document.getElementById('resetBtn');
   const historyEl = document.getElementById('history');
   const clearHistoryBtn = document.getElementById('clearHistory');
-  const resetBtn = document.getElementById('resetBtn');
+  const statsEl = document.getElementById('stats');
+  const searchEl = document.getElementById('searchHistory');
 
-  // Helpers
-  function toNumber(v){ v = Number(v); return isFinite(v) ? v : 0; }
+  let sortMode = 'recent';
+
+  function toNumber(v){ return isFinite(Number(v)) ? Number(v) : 0; }
   function money(n){ return n.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
   function calc(sale, cost){
     sale = toNumber(sale);
@@ -192,169 +192,125 @@
     return { sale, cost, profit, base, eligible, commission };
   }
 
-  // Update UI
   function updateAll(){
-    const sale = parseFloat(saleEl.value) || 0;
-    const cost = parseFloat(costEl.value) || 0;
-    const r = calc(sale, cost);
-
+    const r = calc(saleEl.value, costEl.value);
     outSale.textContent = '$' + money(r.sale);
     outCost.textContent = '$' + money(r.cost);
     outProfit.textContent = '$' + money(r.profit);
     outBase.textContent = '$' + money(r.base);
     outEligible.textContent = '$' + money(r.eligible);
     outCommission.textContent = '$' + money(r.commission);
-    // small accessibility hint
-    outCommission.setAttribute('aria-label', 'Commission is ' + outCommission.textContent);
   }
 
-  // History (localStorage)
-  const STORAGE_KEY = 'g2_commission_history_v1';
-  function loadHistory(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
-  }
-  function saveHistory(arr){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-    renderHistory();
-  }
+  const STORAGE_KEY = 'g2_commission_history_v5';
+  function loadHistory(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return [];} }
+  function saveHistory(arr){ localStorage.setItem(STORAGE_KEY,JSON.stringify(arr)); renderHistory(); }
+
   function addHistory(entry){
     const arr = loadHistory();
     arr.unshift(entry);
-    if(arr.length > 200) arr.length = 200;
+    if(arr.length>200) arr.length=200;
     saveHistory(arr);
   }
-  function clearHistory(){
-    localStorage.removeItem(STORAGE_KEY);
-    renderHistory();
+
+  function clearHistory(){ localStorage.removeItem(STORAGE_KEY); renderHistory(); }
+
+  function editHistory(index){
+    const arr = loadHistory();
+    const newName = prompt('Edit Job Name', arr[index].jobName);
+    if(newName!==null){
+      arr[index].jobName=newName.trim()||'Unnamed Job';
+      saveHistory(arr);
+      saleEl.value = arr[index].sale;
+      costEl.value = arr[index].cost;
+      jobEl.value = arr[index].jobName;
+      updateAll();
+    }
   }
+
+  function deleteHistory(index){
+    const arr = loadHistory();
+    if(confirm(`Delete "${arr[index].jobName}"?`)){
+      arr.splice(index,1);
+      saveHistory(arr);
+    }
+  }
+
   function renderHistory(){
     const arr = loadHistory();
+    let filtered = arr;
+
+    const query = searchEl.value.trim().toLowerCase();
+    if(query) filtered = arr.filter(it => it.jobName.toLowerCase().includes(query));
+
+    if(sortMode==='high') filtered.sort((a,b)=>b.commission-a.commission);
+    else if(sortMode==='low') filtered.sort((a,b)=>a.commission-b.commission);
+
     historyEl.innerHTML = '';
-    if(arr.length === 0){
-      historyEl.innerHTML = '<div class="muted">No saved history yet — use "Save to History".</div>';
-      return;
-    }
-    arr.forEach((it, idx) => {
-      const div = document.createElement('div');
-      div.className = 'history-item';
-      const left = document.createElement('div');
-      left.innerHTML = '<div style="font-weight:700">$' + money(it.sale) + ' / $' + money(it.cost) + '</div>' +
-                        '<div class="muted" style="font-size:12px;margin-top:4px">' + it.timestamp + '</div>';
-      const right = document.createElement('div');
-      right.style.textAlign = 'right';
-      right.innerHTML = '<div style="font-weight:700;color:#0f5132">$' + money(it.commission) + '</div>' +
-                        '<div class="muted" style="font-size:12px;margin-top:4px">Eligible: $' + money(it.eligible) + '</div>';
-      div.appendChild(left);
-      div.appendChild(right);
+    if(!filtered.length){ historyEl.innerHTML='<div class="muted">No saved history.</div>'; statsEl.textContent=''; return; }
+
+    let total = 0;
+    filtered.forEach((it,i)=>{
+      total+=it.commission;
+      const div = document.createElement('div'); div.className='history-item';
+      div.innerHTML = `
+        <div style="flex:1">
+          <div style="font-weight:700">${it.jobName}</div>
+          <div class="muted" style="font-size:12px;margin-top:2px">Sale: $${money(it.sale)} | Cost: $${money(it.cost)} | Eligible: $${money(it.eligible)}</div>
+          <div class="muted" style="font-size:12px">${it.timestamp}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="font-weight:700;color:#0f5132">$${money(it.commission)}</div>
+          <button style="font-size:12px;padding:2px 6px;border-radius:4px" onclick="editHistory(${i})">Edit</button>
+          <button style="font-size:12px;padding:2px 6px;border-radius:4px;color:#dc2626" onclick="deleteHistory(${i})">Delete</button>
+        </div>`;
       historyEl.appendChild(div);
     });
+    statsEl.textContent='Saved Jobs: '+filtered.length+' | Total Commission: $'+money(total);
   }
 
-  // Export CSV
-  function exportCSV(){
-    const arr = loadHistory();
-    if(!arr.length){ alert('No history to export. Save some calculations first.'); return; }
-    const header = ['timestamp','sale','cost','profit','base_threshold','eligible','commission'];
-    const rows = [header.join(',')];
-    arr.forEach(it=>{
-      const row = [
-        JSON.stringify(it.timestamp),
-        it.sale.toFixed(2),
-        it.cost.toFixed(2),
-        it.profit.toFixed(2),
-        it.base.toFixed(2),
-        it.eligible.toFixed(2),
-        it.commission.toFixed(2)
-      ];
-      rows.push(row.join(','));
-    });
-    const csv = rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'g2commission-history.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
+  window.editHistory = editHistory;
+  window.deleteHistory = deleteHistory;
 
-  // Wire events
+  document.querySelectorAll('.small-row button[data-sale]').forEach(b=>{
+    b.addEventListener('click', ()=>{ saleEl.value=b.dataset.sale; costEl.value=b.dataset.cost; updateAll(); });
+  });
+
+  calcBtn.addEventListener('click', updateAll);
   saleEl.addEventListener('input', updateAll);
   costEl.addEventListener('input', updateAll);
-  calcBtn.addEventListener('click', updateAll);
 
-  // Quick example buttons
-  document.querySelectorAll('.examples button').forEach(b=>{
-    b.addEventListener('click', ()=> {
-      saleEl.value = b.getAttribute('data-sale');
-      costEl.value = b.getAttribute('data-cost');
-      updateAll();
-    });
-  });
-
-  // Copy commission
-  copyBtn.addEventListener('click', ()=>{
-    const text = outCommission.textContent + ' — Commission for sale ' + outSale.textContent + ' / cost ' + outCost.textContent;
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(()=> {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(()=> copyBtn.textContent = 'Copy Commission', 1200);
-      }, ()=> alert('Could not copy to clipboard.'));
-    } else {
-      // fallback
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); copyBtn.textContent = 'Copied!'; setTimeout(()=> copyBtn.textContent = 'Copy Commission', 1200); }
-      catch(e){ alert('Copy failed.'); }
-      ta.remove();
-    }
-  });
-
-  // Save to history
   saveBtn.addEventListener('click', ()=>{
-    const sale = parseFloat(saleEl.value) || 0;
-    const cost = parseFloat(costEl.value) || 0;
-    const r = calc(sale, cost);
-    const entry = {
-      timestamp: (new Date()).toLocaleString(),
-      sale: r.sale,
-      cost: r.cost,
-      profit: r.profit,
-      base: r.base,
-      eligible: r.eligible,
-      commission: r.commission
-    };
-    addHistory(entry);
-    saveBtn.textContent = 'Saved';
-    setTimeout(()=> saveBtn.textContent = 'Save to History', 900);
+    const r = calc(saleEl.value, costEl.value);
+    const jobName = jobEl.value.trim()||'Unnamed Job';
+    addHistory({ jobName, timestamp: new Date().toLocaleString(), sale:r.sale, cost:r.cost, profit:r.profit, base:r.base, eligible:r.eligible, commission:r.commission });
+    saveBtn.textContent='Saved!'; setTimeout(()=>saveBtn.textContent='Save to History',900);
   });
 
-  clearHistoryBtn.addEventListener('click', ()=> {
-    if(confirm('Clear all saved history?')) clearHistory();
+  clearHistoryBtn.addEventListener('click', ()=>{ if(confirm('Clear all saved history?')) clearHistory(); });
+
+  copyBtn.addEventListener('click', ()=>{
+    const text=outCommission.textContent+' — Commission for '+jobEl.value+' ($'+money(saleEl.value)+' / $'+money(costEl.value)+')';
+    navigator.clipboard?.writeText(text).then(()=>{ copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy Commission',1200); });
   });
 
-  exportBtn.addEventListener('click', exportCSV);
-
-  resetBtn.addEventListener('click', ()=> {
-    saleEl.value = '';
-    costEl.value = '';
-    updateAll();
+  exportBtn.addEventListener('click', ()=>{
+    const arr = loadHistory(); if(!arr.length){ alert('No history to export.'); return; }
+    const rows=[['Job Name','Timestamp','Sale','Cost','Profit','Threshold','Eligible','Commission']];
+    arr.forEach(it=>rows.push([it.jobName,it.timestamp,it.sale.toFixed(2),it.cost.toFixed(2),it.profit.toFixed(2),it.base.toFixed(2),it.eligible.toFixed(2),it.commission.toFixed(2)].join(',')));
+    const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='g2commission-history.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   });
 
-  // about link
-  document.getElementById('aboutLink').addEventListener('click',(e)=>{
-    e.preventDefault();
-    alert('G2construction Commission Calculator\\n\\nFormula: commission = 0.40 × max(0, (sale - cost) - 0.18 × sale)\\n\\nLocal history is stored in your browser only.');
-  });
+  resetBtn.addEventListener('click', ()=>{ saleEl.value=''; costEl.value=''; jobEl.value=''; updateAll(); });
 
-  // init
+  searchEl.addEventListener('input', renderHistory);
+  document.getElementById('sortRecent').addEventListener('click', ()=>{ sortMode='recent'; renderHistory(); });
+  document.getElementById('sortHigh').addEventListener('click', ()=>{ sortMode='high'; renderHistory(); });
+  document.getElementById('sortLow').addEventListener('click', ()=>{ sortMode='low'; renderHistory(); });
+
+  document.getElementById('aboutLink').addEventListener('click', e=>{ e.preventDefault(); alert('G2Construction Commission Calculator\nFormula: commission = 0.40 × max(0, (sale - cost) - 0.18 × sale)\nLocal history stored in browser.\nEdit jobs to update inputs.\nSearch and sort history as needed.'); });
+
   renderHistory();
   updateAll();
 })();
