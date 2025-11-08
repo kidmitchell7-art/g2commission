@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G2 Construction Commission Tracker</title>
+
+<!-- Cache-busting for Home Screen on iOS -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
 <style>
   body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
   h1 { text-align:center; font-size:24px; margin-bottom:20px; }
@@ -92,7 +98,7 @@
 
   // Save job
   document.getElementById('saveBtn').addEventListener('click', async () => {
-    const profile = profileSelect.value.trim(); // ensures exact match
+    const profile = profileSelect.value.trim();
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
@@ -124,17 +130,15 @@
         await db.collection("jobs").add(jobData);
       }
 
-      // Clear fields
       jobEl.value = '';
       saleEl.value = '';
       costEl.value = '';
       resultsEl.textContent = '';
 
-      // Reload jobs AFTER save completes
       await loadJobs();
     } catch (err) {
       console.error(err);
-      alert("Error saving job. Check Firebase console for details.");
+      alert("Error saving job. Check Firebase console.");
     }
   });
 
@@ -142,15 +146,20 @@
   async function loadJobs() {
     const profile = profileSelect.value.trim();
     historyEl.innerHTML = "Loading...";
+
+    // Timeout fallback for Home Screen
+    const loadingTimeout = setTimeout(() => {
+      if(historyEl.innerHTML === "Loading...") {
+        historyEl.innerHTML = "Still loading… try refreshing the Home Screen app.";
+      }
+    }, 5000);
+
     try {
       let query = db.collection("jobs").orderBy("created","desc");
-
-      // Only filter in Firestore if NOT Sam
-      if(profile !== "Sam") {
-        query = query.where("profile","==",profile);
-      }
+      if(profile !== "Sam") query = query.where("profile","==",profile);
 
       const snapshot = await query.get();
+      clearTimeout(loadingTimeout);
       historyEl.innerHTML = "";
 
       snapshot.forEach(doc => {
@@ -177,8 +186,9 @@
       if(historyEl.innerHTML === "") historyEl.innerHTML = "No jobs yet.";
 
     } catch(err) {
+      clearTimeout(loadingTimeout);
       console.error(err);
-      historyEl.innerHTML = "Error loading jobs.";
+      historyEl.innerHTML = "Error loading jobs. Check internet connection.";
     }
   }
 
@@ -195,7 +205,7 @@
   }
 
   async function deleteJob(id) {
-    if (confirm("Delete this job?")) {
+    if(confirm("Delete this job?")) {
       await db.collection("jobs").doc(id).delete();
       await loadJobs();
     }
