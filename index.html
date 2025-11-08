@@ -18,8 +18,6 @@
   .delete-btn { background:#dc3545; }
   .edit-btn:hover { background:#5a6268; }
   .delete-btn:hover { background:#c82333; }
-  #export-buttons { display:flex; justify-content:space-between; margin-top:10px; }
-  #jobName { width:100%; }
 </style>
 </head>
 <body>
@@ -49,11 +47,6 @@
 
   <h3>Job History</h3>
   <div id="history"></div>
-
-  <div id="export-buttons">
-    <button id="pdfBtn">Export PDF</button>
-    <button id="csvBtn">Export CSV</button>
-  </div>
 </div>
 
 <!-- Firebase SDKs -->
@@ -61,7 +54,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // 🔥 Your Firebase configuration (paste yours here)
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
     authDomain: "g2-construction-commissi-35729.firebaseapp.com",
@@ -73,13 +66,14 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // App variables
+  // Elements
   const profileSelect = document.getElementById('profileSelect');
   const jobEl = document.getElementById('jobName');
   const saleEl = document.getElementById('sale');
   const costEl = document.getElementById('cost');
   const resultsEl = document.getElementById('results');
   const historyEl = document.getElementById('history');
+
   let editingJobId = null;
 
   // Calculate commission
@@ -97,12 +91,13 @@
     `;
   });
 
-  // Save job to Firestore
+  // Save job
   document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const profile = profileSelect.value;
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
+
     if(!jobName) return alert("Please enter a job name.");
 
     const profit = sale - cost;
@@ -111,7 +106,14 @@
     const commission = eligible > 0 ? eligible * 0.4 : 0;
 
     const jobData = {
-      profile, jobName, sale, cost, profit, threshold, eligible, commission,
+      profile,
+      jobName,
+      sale,
+      cost,
+      profit,
+      threshold,
+      eligible,
+      commission,
       created: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -127,31 +129,35 @@
     loadJobs();
   });
 
-  // Load jobs based on profile
+  // Load jobs
   async function loadJobs(){
     const profile = profileSelect.value;
     historyEl.innerHTML = "Loading...";
     let query = db.collection("jobs").orderBy("created","desc");
-    if(profile !== "Sam") query = query.where("profile","==",profile);
     const snapshot = await query.get();
     historyEl.innerHTML = "";
+
     snapshot.forEach(doc=>{
       const j = doc.data();
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <div>
-          <b>${j.jobName}</b> (${j.profile})<br>
-          Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
-        </div>
-        <div>
-          <button class="edit-btn">Edit</button>
-          <button class="delete-btn">Delete</button>
-        </div>
-      `;
-      const [editBtn, delBtn] = div.querySelectorAll('button');
-      editBtn.addEventListener('click', ()=> editJob(doc.id, j));
-      delBtn.addEventListener('click', ()=> deleteJob(doc.id));
-      historyEl.appendChild(div);
+      j.id = doc.id;
+
+      if(profile === "Sam" || j.profile === profile){
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <div>
+            <b>${j.jobName}</b> (${j.profile})<br>
+            Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+          </div>
+          <div>
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          </div>
+        `;
+        const [editBtn, delBtn] = div.querySelectorAll('button');
+        editBtn.addEventListener('click', ()=> editJob(doc.id, j));
+        delBtn.addEventListener('click', ()=> deleteJob(doc.id));
+        historyEl.appendChild(div);
+      }
     });
   }
 
@@ -175,6 +181,8 @@
   }
 
   profileSelect.addEventListener('change', loadJobs);
+
+  // Initial load
   loadJobs();
 </script>
 </body>
