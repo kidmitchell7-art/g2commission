@@ -46,7 +46,7 @@
   <button id="saveBtn">Save Job</button>
 
   <h3>Job History</h3>
-  <div id="history"></div>
+  <div id="history">Loading...</div>
 </div>
 
 <!-- Firebase SDKs -->
@@ -66,7 +66,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // Elements
   const profileSelect = document.getElementById('profileSelect');
   const jobEl = document.getElementById('jobName');
   const saleEl = document.getElementById('sale');
@@ -77,7 +76,7 @@
   let editingJobId = null;
 
   // Calculate commission
-  document.getElementById('calcBtn').addEventListener('click', ()=>{
+  document.getElementById('calcBtn').addEventListener('click', () => {
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
     const profit = sale - cost;
@@ -92,13 +91,13 @@
   });
 
   // Save job
-  document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  document.getElementById('saveBtn').addEventListener('click', async () => {
     const profile = profileSelect.value;
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
 
-    if(!jobName) return alert("Please enter a job name.");
+    if (!jobName) return alert("Please enter a job name.");
 
     const profit = sale - cost;
     const threshold = sale * 0.18;
@@ -117,51 +116,63 @@
       created: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    if(editingJobId){
-      await db.collection("jobs").doc(editingJobId).set(jobData);
-      editingJobId = null;
-    } else {
-      await db.collection("jobs").add(jobData);
+    try {
+      if (editingJobId) {
+        await db.collection("jobs").doc(editingJobId).set(jobData);
+        editingJobId = null;
+      } else {
+        await db.collection("jobs").add(jobData);
+      }
+      // Clear fields
+      jobEl.value = '';
+      saleEl.value = '';
+      costEl.value = '';
+      resultsEl.textContent = '';
+      // Reload jobs AFTER save completes
+      await loadJobs();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving job. Check Firebase console for details.");
     }
-
-    jobEl.value=''; saleEl.value=''; costEl.value='';
-    resultsEl.textContent='';
-    loadJobs();
   });
 
   // Load jobs
-  async function loadJobs(){
+  async function loadJobs() {
     const profile = profileSelect.value;
     historyEl.innerHTML = "Loading...";
-    let query = db.collection("jobs").orderBy("created","desc");
-    const snapshot = await query.get();
-    historyEl.innerHTML = "";
-
-    snapshot.forEach(doc=>{
-      const j = doc.data();
-      j.id = doc.id;
-
-      if(profile === "Sam" || j.profile === profile){
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <div>
-            <b>${j.jobName}</b> (${j.profile})<br>
-            Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
-          </div>
-          <div>
-            <button class="edit-btn">Edit</button>
-            <button class="delete-btn">Delete</button>
-          </div>
-        `;
-        const [editBtn, delBtn] = div.querySelectorAll('button');
-        editBtn.addEventListener('click', ()=> editJob(doc.id, j));
-        delBtn.addEventListener('click', ()=> deleteJob(doc.id));
-        historyEl.appendChild(div);
-      }
-    });
+    try {
+      const snapshot = await db.collection("jobs").orderBy("created", "desc").get();
+      historyEl.innerHTML = "";
+      snapshot.forEach(doc => {
+        const j = doc.data();
+        j.id = doc.id;
+        // Filter jobs for profile
+        if (profile === "Sam" || j.profile === profile) {
+          const div = document.createElement('div');
+          div.innerHTML = `
+            <div>
+              <b>${j.jobName}</b> (${j.profile})<br>
+              Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+            </div>
+            <div>
+              <button class="edit-btn">Edit</button>
+              <button class="delete-btn">Delete</button>
+            </div>
+          `;
+          const [editBtn, delBtn] = div.querySelectorAll('button');
+          editBtn.addEventListener('click', () => editJob(doc.id, j));
+          delBtn.addEventListener('click', () => deleteJob(doc.id));
+          historyEl.appendChild(div);
+        }
+      });
+      if(historyEl.innerHTML === "") historyEl.innerHTML = "No jobs yet.";
+    } catch(err) {
+      console.error(err);
+      historyEl.innerHTML = "Error loading jobs.";
+    }
   }
 
-  async function editJob(id, job){
+  async function editJob(id, job) {
     editingJobId = id;
     jobEl.value = job.jobName;
     saleEl.value = job.sale;
@@ -173,10 +184,10 @@
     `;
   }
 
-  async function deleteJob(id){
-    if(confirm("Delete this job?")){
+  async function deleteJob(id) {
+    if (confirm("Delete this job?")) {
       await db.collection("jobs").doc(id).delete();
-      loadJobs();
+      await loadJobs();
     }
   }
 
