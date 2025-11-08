@@ -1,483 +1,305 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>G2 Construction Commission Tracking — Profiles</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G2 Construction Commission Tracking</title>
 <style>
 :root{--accent:#0077b6;--muted:#6b7280;--bg:#f6f9fc;--card:#fff;--success:#16a34a;--danger:#dc2626}
-html,body{height:100%}
-body{
-  margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-  background:linear-gradient(180deg,#e9f2fb 0%,var(--bg) 100%);color:#0f172a;
-  display:flex;justify-content:center;padding:18px;min-height:100vh;overflow-y:auto;padding-top:env(safe-area-inset-top,20px);
-}
-.container{width:100%;max-width:980px;background:var(--card);border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,0.08);padding:20px;padding-top:70px}
-header{display:flex;gap:16px;align-items:center;margin-bottom:6px;position:relative}
-.logo{width:62px;height:62px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px}
-.logo .g{color:black}
-.logo .n2{color:var(--accent)}
-h1{margin:0;font-size:20px;font-weight:800}
-.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
-.controls{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px}
-@media(max-width:800px){.grid{grid-template-columns:1fr}}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.95),var(--card));border-radius:10px;padding:14px;border:1px solid rgba(15,23,42,0.04)}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-input[type="number"], input[type="text"], select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6eef6;background:#fbfdff;font-size:16px;box-sizing:border-box;margin-bottom:10px}
-.small-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-button{background:var(--accent);color:white;border:0;padding:9px 12px;border-radius:8px;font-weight:700;cursor:pointer}
-button.ghost{background:transparent;border:1px solid rgba(2,6,23,0.06);color:var(--muted);font-weight:700}
-.muted{color:var(--muted);font-size:13px}
-.result-line{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03);margin-bottom:8px}
-.big{font-weight:800}
-.green{color:var(--success)}
-.history-list{max-height:300px;overflow:auto;border-radius:8px;padding:6px;background:#fbfdff;border:1px solid rgba(2,6,23,0.03)}
-.history-item{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:8px;background:linear-gradient(180deg,#fff,#fbfdff)}
-.small-button{padding:6px 8px;font-size:13px;border-radius:6px}
-.footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-.modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.4);z-index:999}
-.modal-card{width:90%;max-width:520px;background:white;border-radius:10px;padding:16px}
-.table{width:100%;border-collapse:collapse;margin-top:8px}
-.table th,.table td{border:1px solid #eee;padding:8px;text-align:left;font-size:13px}
-.header-small{font-size:12px;color:var(--muted)}
+body{margin:0;font-family:sans-serif;background:var(--bg);color:#0f172a;display:flex;justify-content:center;padding:20px;}
+.container{max-width:980px;width:100%;background:var(--card);border-radius:12px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,0.1);}
+header{display:flex;align-items:center;gap:16px;margin-bottom:12px;position:relative;}
+.logo{font-weight:800;font-size:28px;}
+.logo .g{color:black;}
+.logo .n2{color:var(--accent);}
+h1{margin:0;font-size:22px;}
+.lead{margin-top:4px;font-size:14px;color:var(--muted);}
+.controls{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+input,select{padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;width:100%;box-sizing:border-box;}
+button{padding:8px 12px;border:none;border-radius:6px;background:var(--accent);color:white;cursor:pointer;font-weight:700;}
+button.ghost{background:transparent;border:1px solid #ccc;color:var(--muted);}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:800px){.grid{grid-template-columns:1fr;}}
+.card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.result-line{display:flex;justify-content:space-between;margin:4px 0;padding:6px;border:1px solid #eee;border-radius:6px;background:#f9f9f9;}
+.big{font-weight:800;}
+.green{color:var(--success);}
+.history-list{max-height:300px;overflow:auto;border:1px solid #eee;border-radius:6px;padding:6px;margin-top:6px;}
+.history-item{display:flex;justify-content:space-between;padding:6px;border-radius:6px;margin-bottom:6px;background:#fff;}
+.small-button{padding:4px 6px;font-size:12px;border-radius:4px;}
+.edit-btn, .delete-btn{margin-left:4px;padding:2px 6px;font-size:11px;border-radius:4px;background:#ddd;color:#000;cursor:pointer;}
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
-    <div class="logo"><span class="g">G</span><span class="n2">2</span></div>
-    <div>
-      <h1><span style="color:black">G</span><span style="color:#0077b6">2</span> Construction Commission Tracking</h1>
-      <div class="lead">Profiles, personal histories, editable jobs, and G2-branded export for payroll.</div>
-      <div class="controls">
-        <label class="header-small" style="margin:0 8px 0 0">Profile</label>
-        <select id="profileSelect" aria-label="Select profile">
-          <option value="David">David</option>
-          <option value="Joseph">Joseph</option>
-          <option value="Sam">Sam</option>
-        </select>
-        <button id="downloadAllPdf" class="ghost small-button">Export Profile PDF</button>
-        <button id="exportCsv" class="ghost small-button">Export CSV</button>
-      </div>
-    </div>
-  </header>
+<header>
+<div class="logo"><span class="g">G</span><span class="n2">2</span></div>
+<div>
+<h1><span style="color:black">G</span><span style="color:#0077b6">2</span> Construction Commission Tracking</h1>
+<div class="lead">Profiles, editable job history, commission breakdown, and export.</div>
+<div class="controls">
+<label>Profile:</label>
+<select id="profileSelect">
+<option value="David">David</option>
+<option value="Joseph">Joseph</option>
+<option value="Sam">Sam</option>
+</select>
+<select id="filterSelect" style="display:none;">
+<option value="all">All Profiles</option>
+<option value="David">David</option>
+<option value="Joseph">Joseph</option>
+</select>
+<button id="exportPdf" class="ghost">Export PDF</button>
+<button id="exportCsv" class="ghost">Export CSV</button>
+</div>
+</div>
+</header>
 
-  <div class="grid">
-    <div class="card">
-      <label for="jobName">Job Name (optional)</label>
-      <input id="jobName" type="text" placeholder="e.g. Smith Residence" />
-
-      <label for="sale">Sale price (total job)</label>
-      <input id="sale" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 28706" />
-
-      <label for="cost">Cost (your cost)</label>
-      <input id="cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 20000" />
-
-      <div class="small-row" style="margin-top:6px">
-        <button id="calcBtn">Calculate</button>
-        <button id="saveBtn" class="ghost">Save Job</button>
-        <button id="clearBtn" class="ghost">Clear Inputs</button>
-      </div>
-
-      <div style="margin-top:12px">
-        <div class="muted">Quick result</div>
-        <div class="result-line"><div class="muted">Sale</div><div id="rSale" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Cost</div><div id="rCost" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Profit</div><div id="rProfit" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">18% Threshold</div><div id="rThresh" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Eligible Profit</div><div id="rElig" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Commission (40%)</div><div id="rComm" class="big green">$0.00</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="muted">Saved Jobs (for <span id="currentProfile">David</span>)</div>
-          <input id="search" type="text" placeholder="Search by job name..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #eee;margin-top:8px" />
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <button id="sortRecent" class="ghost small-button">Recent</button>
-          <button id="sortHigh" class="ghost small-button">High Comm</button>
-          <button id="sortLow" class="ghost small-button">Low Comm</button>
-        </div>
-      </div>
-
-      <div id="history" class="history-list" style="margin-top:10px"></div>
-
-      <div style="margin-top:10px">
-        <div class="muted">Profile Totals</div>
-        <div class="result-line"><div class="muted">Total Sales</div><div id="tSales" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Total Profit</div><div id="tProfit" class="big">$0.00</div></div>
-        <div class="result-line"><div class="muted">Total Commission</div><div id="tComm" class="big green">$0.00</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div class="muted">Formula: commission = 40% × max(0, (sale - cost) - 18% × sale)</div>
-    <div class="muted">Local-only profiles — data stored on device</div>
-  </div>
+<div class="grid">
+<div class="card">
+<label>Job Name</label>
+<input id="jobName" type="text" placeholder="e.g. Smith Residence">
+<label>Sale Price</label>
+<input id="sale" type="number" step="0.01" placeholder="e.g. 28706">
+<label>Cost</label>
+<input id="cost" type="number" step="0.01" placeholder="e.g. 20000">
+<div style="display:flex;gap:6px;margin-top:6px;">
+<button id="calcBtn">Calculate</button>
+<button id="saveBtn" class="ghost">Save Job</button>
+<button id="clearBtn" class="ghost">Clear</button>
+</div>
+<div style="margin-top:10px;">
+<div class="result-line"><div>Sale</div><div id="rSale" class="big">$0.00</div></div>
+<div class="result-line"><div>Cost</div><div id="rCost" class="big">$0.00</div></div>
+<div class="result-line"><div>Profit</div><div id="rProfit" class="big">$0.00</div></div>
+<div class="result-line"><div>18% Threshold</div><div id="rThresh" class="big">$0.00</div></div>
+<div class="result-line"><div>Eligible Profit</div><div id="rElig" class="big">$0.00</div></div>
+<div class="result-line"><div>Commission (40%)</div><div id="rComm" class="big green">$0.00</div></div>
+</div>
 </div>
 
-<!-- Edit Modal -->
-<div id="modal" style="display:none" class="modal" role="dialog" aria-modal="true">
-  <div class="modal-card">
-    <h3 style="margin-top:0">Edit Job</h3>
-    <label>Job Name</label>
-    <input id="editName" type="text" />
-    <label>Sale</label>
-    <input id="editSale" type="number" step="0.01" />
-    <label>Cost</label>
-    <input id="editCost" type="number" step="0.01" />
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button id="saveEdit">Save</button>
-      <button id="cancelEdit" class="ghost">Cancel</button>
-    </div>
-  </div>
+<div class="card">
+<div>
+<label>Saved Jobs (<span id="currentProfile">David</span>)</label>
+<input id="search" type="text" placeholder="Search jobs...">
+</div>
+<div style="display:flex;gap:6px;margin-top:6px;">
+<button id="sortRecent" class="ghost small-button">Recent</button>
+<button id="sortHigh" class="ghost small-button">High Comm</button>
+<button id="sortLow" class="ghost small-button">Low Comm</button>
+</div>
+<div id="history" class="history-list"></div>
+<div style="margin-top:10px;">
+<div class="result-line"><div>Total Sales</div><div id="tSales" class="big">$0.00</div></div>
+<div class="result-line"><div>Total Profit</div><div id="tProfit" class="big">$0.00</div></div>
+<div class="result-line"><div>Total Commission</div><div id="tComm" class="big green">$0.00</div></div>
+</div>
+</div>
+</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-/* =========================
-   Utilities & config
-   ========================= */
-const PROFILES = ['David','Joseph','Sam'];
-const BASE_PCT = 0.18;
-const COMM_PCT = 0.40;
-const profileSelect = document.getElementById('profileSelect');
-const currentProfileLabel = document.getElementById('currentProfile');
+const PROFILES=['David','Joseph','Sam'];
+const BASE_PCT=0.18;
+const COMM_PCT=0.4;
 
-function money(n){ return (Number(n) || 0).toLocaleString('en-US',{style:'currency',currency:'USD'}); }
+const profileSelect=document.getElementById('profileSelect');
+const filterSelect=document.getElementById('filterSelect');
+const currentProfile=document.getElementById('currentProfile');
+const saleEl=document.getElementById('sale');
+const costEl=document.getElementById('cost');
+const jobEl=document.getElementById('jobName');
+const rSale=document.getElementById('rSale');
+const rCost=document.getElementById('rCost');
+const rProfit=document.getElementById('rProfit');
+const rThresh=document.getElementById('rThresh');
+const rElig=document.getElementById('rElig');
+const rComm=document.getElementById('rComm');
+const historyEl=document.getElementById('history');
+const searchEl=document.getElementById('search');
+
+let editingJobId=null;
+
+function money(n){return Number(n).toLocaleString('en-US',{style:'currency',currency:'USD'});}
+function storageKey(profile){return 'g2_jobs_'+profile;}
+function loadJobs(profile){return JSON.parse(localStorage.getItem(storageKey(profile))||'[]');}
+function saveJobs(profile,jobs){localStorage.setItem(storageKey(profile),JSON.stringify(jobs));}
 function calcFromValues(sale,cost){
-  sale = Number(sale) || 0;
-  cost = Number(cost) || 0;
-  const profit = sale - cost;
-  const thresh = sale * BASE_PCT;
-  const eligible = Math.max(0, profit - thresh);
-  const commission = eligible * COMM_PCT;
-  return { sale, cost, profit, thresh, eligible, commission };
+sale=Number(sale)||0; cost=Number(cost)||0;
+let profit=sale-cost;
+let thresh=sale*BASE_PCT;
+let eligible=Math.max(0,profit-thresh);
+let commission=eligible*COMM_PCT;
+return {sale,cost,profit,thresh,eligible,commission};
 }
-function storageKey(profile){ return 'g2_jobs_' + profile; }
-
-/* =========================
-   Profile handling
-   ========================= */
-function setProfile(profile){
-  profileSelect.value = profile;
-  localStorage.setItem('g2_lastProfile', profile);
-  currentProfileLabel.textContent = profile;
-  renderHistory();
-  updateTotals();
-}
-
-profileSelect.addEventListener('change', ()=> setProfile(profileSelect.value));
-
-(function initProfile(){
-  const last = localStorage.getItem('g2_lastProfile') || PROFILES[0];
-  // ensure select matches available profiles
-  if(!PROFILES.includes(last)) localStorage.removeItem('g2_lastProfile');
-  setProfile(last);
-})();
-
-/* =========================
-   CRUD: jobs per profile
-   ========================= */
-function loadJobs(profile){
-  try{
-    const raw = localStorage.getItem(storageKey(profile)) || '[]';
-    return JSON.parse(raw);
-  }catch(e){ return []; }
-}
-function saveJobs(profile, jobs){
-  localStorage.setItem(storageKey(profile), JSON.stringify(jobs));
-}
-
-/* =========================
-   UI: calculation & saving
-   ========================= */
-const saleEl = document.getElementById('sale');
-const costEl = document.getElementById('cost');
-const jobEl = document.getElementById('jobName');
-const rSale = document.getElementById('rSale');
-const rCost = document.getElementById('rCost');
-const rProfit = document.getElementById('rProfit');
-const rThresh = document.getElementById('rThresh');
-const rElig = document.getElementById('rElig');
-const rComm = document.getElementById('rComm');
-
 function updateQuickCalc(){
-  const vals = calcFromValues(saleEl.value, costEl.value);
-  rSale.textContent = money(vals.sale);
-  rCost.textContent = money(vals.cost);
-  rProfit.textContent = money(vals.profit);
-  rThresh.textContent = money(vals.thresh);
-  rElig.textContent = money(vals.eligible);
-  rComm.textContent = money(vals.commission);
-  return vals;
+  const v=calcFromValues(saleEl.value,costEl.value);
+  rSale.textContent=money(v.sale);
+  rCost.textContent=money(v.cost);
+  rProfit.textContent=money(v.profit);
+  rThresh.textContent=money(v.thresh);
+  rElig.textContent=money(v.eligible);
+  rComm.textContent=money(v.commission);
+  return v;
 }
-document.getElementById('calcBtn').addEventListener('click', updateQuickCalc);
-[saleEl,costEl].forEach(i=>i.addEventListener('input', updateQuickCalc));
+document.getElementById('calcBtn').addEventListener('click',updateQuickCalc);
+[saleEl,costEl].forEach(i=>i.addEventListener('input',updateQuickCalc));
+document.getElementById('clearBtn').addEventListener('click',()=>{saleEl.value='';costEl.value='';jobEl.value='';editingJobId=null;updateQuickCalc();});
 
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  saleEl.value=''; costEl.value=''; jobEl.value=''; updateQuickCalc();
-});
-
-/* Save job */
-document.getElementById('saveBtn').addEventListener('click', ()=>{
-  const profile = profileSelect.value;
-  const vals = updateQuickCalc();
-  const entry = {
-    id: 'id_' + Date.now() + '_' + Math.floor(Math.random()*9999),
-    jobName: (jobEl.value||'').trim() || 'Unnamed Job',
-    sale: vals.sale,
-    cost: vals.cost,
-    profit: vals.profit,
-    thresh: vals.thresh,
-    eligible: vals.eligible,
-    commission: vals.commission,
-    created: new Date().toISOString()
-  };
-  const jobs = loadJobs(profile);
-  jobs.unshift(entry);
-  saveJobs(profile,jobs);
-  renderHistory();
-  updateTotals();
-  // feedback
-  const old = document.getElementById('saveBtn').textContent;
-  document.getElementById('saveBtn').textContent='Saved!';
-  setTimeout(()=> document.getElementById('saveBtn').textContent=old,900);
-});
-
-/* =========================
-   Render history list + edit/delete
-   ========================= */
-const historyEl = document.getElementById('history');
-const searchEl = document.getElementById('search');
-let sortMode = 'recent'; // recent | high | low
-
-function renderHistory(){
-  const profile = profileSelect.value;
-  let jobs = loadJobs(profile);
-  const query = (searchEl.value||'').trim().toLowerCase();
-  if(query) jobs = jobs.filter(j => (j.jobName||'').toLowerCase().includes(query));
-  if(sortMode === 'high') jobs = jobs.slice().sort((a,b)=>b.commission - a.commission);
-  else if(sortMode === 'low') jobs = jobs.slice().sort((a,b)=>a.commission - b.commission);
-  historyEl.innerHTML = '';
-  if(!jobs.length){ historyEl.innerHTML = '<div class="muted">No saved jobs for this profile.</div>'; return; }
-  jobs.forEach((j, idx)=>{
-    const d = document.createElement('div');
-    d.className = 'history-item';
-    d.innerHTML = `
-      <div style="flex:1">
-        <div style="font-weight:700">${escapeHtml(j.jobName)}</div>
-        <div class="header-small" style="margin-top:6px">Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)}</div>
-        <div class="header-small">${new Date(j.created).toLocaleString()}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div style="font-weight:800;color:#0f5132">${money(j.commission)}</div>
-        <div style="display:flex;gap:6px">
-          <button class="ghost small-button" data-id="${j.id}" data-action="view">View</button>
-          <button class="small-button" data-id="${j.id}" data-action="edit">Edit</button>
-          <button class="ghost small-button" data-id="${j.id}" data-action="delete" style="color:var(--danger)">Delete</button>
-        </div>
-      </div>`;
-    historyEl.appendChild(d);
-  });
-}
-
-/* event delegation for history buttons */
-historyEl.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const id = btn.getAttribute('data-id');
-  const action = btn.getAttribute('data-action');
-  if(action === 'delete') return handleDelete(id);
-  if(action === 'edit') return handleEdit(id);
-  if(action === 'view') return handleView(id);
-});
-
-/* Delete */
-function handleDelete(id){
-  if(!confirm('Delete this job?')) return;
-  const profile = profileSelect.value;
-  let jobs = loadJobs(profile);
-  jobs = jobs.filter(j => j.id !== id);
-  saveJobs(profile,jobs);
-  renderHistory();
-  updateTotals();
-}
-
-/* View breakdown in a print-ready window */
-function handleView(id){
-  const profile = profileSelect.value;
-  const jobs = loadJobs(profile);
-  const job = jobs.find(j=>j.id===id);
-  if(!job) return alert('Job not found');
-  openPdfForJobs(profile, [job]);
-}
-
-/* Edit modal handling */
-const modal = document.getElementById('modal');
-const editName = document.getElementById('editName');
-const editSale = document.getElementById('editSale');
-const editCost = document.getElementById('editCost');
-let editingId = null;
-
-function handleEdit(id){
-  const profile = profileSelect.value;
-  const jobs = loadJobs(profile);
-  const job = jobs.find(j=>j.id===id);
-  if(!job) return alert('Job not found');
-  editingId = id;
-  editName.value = job.jobName;
-  editSale.value = job.sale;
-  editCost.value = job.cost;
-  modal.style.display = 'flex';
-}
-
-document.getElementById('cancelEdit').addEventListener('click', ()=>{
-  editingId = null; modal.style.display='none';
-});
-document.getElementById('saveEdit').addEventListener('click', ()=>{
-  const profile = profileSelect.value;
-  const jobs = loadJobs(profile);
-  const idx = jobs.findIndex(j=>j.id===editingId);
-  if(idx === -1) return alert('Could not find saved job');
-  const vals = calcFromValues(editSale.value, editCost.value);
-  jobs[idx].jobName = (editName.value || '').trim() || 'Unnamed Job';
-  jobs[idx].sale = vals.sale;
-  jobs[idx].cost = vals.cost;
-  jobs[idx].profit = vals.profit;
-  jobs[idx].thresh = vals.thresh;
-  jobs[idx].eligible = vals.eligible;
-  jobs[idx].commission = vals.commission;
-  jobs[idx].created = new Date().toISOString();
-  saveJobs(profile,jobs);
-  editingId = null; modal.style.display='none';
-  renderHistory(); updateTotals();
-});
-
-/* =========================
-   Totals & sorting/search
-   ========================= */
-const tSales = document.getElementById('tSales');
-const tProfit = document.getElementById('tProfit');
-const tComm = document.getElementById('tComm');
-
-function updateTotals(){
-  const profile = profileSelect.value;
-  const jobs = loadJobs(profile);
-  const totals = jobs.reduce((acc,j)=>{ acc.sale+=j.sale; acc.profit+=j.profit; acc.comm+=j.commission; return acc; }, {sale:0,profit:0,comm:0});
-  tSales.textContent = money(totals.sale);
-  tProfit.textContent = money(totals.profit);
-  tComm.textContent = money(totals.comm);
-}
-
-/* Sorting and search events */
-document.getElementById('sortRecent').addEventListener('click', ()=>{ sortMode='recent'; renderHistory(); });
-document.getElementById('sortHigh').addEventListener('click', ()=>{ sortMode='high'; renderHistory(); });
-document.getElementById('sortLow').addEventListener('click', ()=>{ sortMode='low'; renderHistory(); });
-searchEl.addEventListener('input', renderHistory);
-
-/* =========================
-   Export: CSV and G2 PDF
-   ========================= */
-function exportCsvForProfile(profile){
-  const jobs = loadJobs(profile);
-  if(!jobs.length){ alert('No jobs to export'); return; }
-  let csv = 'Job Name,Sale,Cost,Profit,Threshold,Eligible,Commission,Created\n';
-  jobs.forEach(j => {
-    csv += `"${(j.jobName||'').replace(/"/g,'""')}",${j.sale.toFixed(2)},${j.cost.toFixed(2)},${j.profit.toFixed(2)},${j.thresh.toFixed(2)},${j.eligible.toFixed(2)},${j.commission.toFixed(2)},"${j.created}"\n`;
-  });
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = profile + '-commissions.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-document.getElementById('exportCsv').addEventListener('click', ()=> exportCsvForProfile(profileSelect.value));
-
-/* Build a G2 branded HTML print view and open print dialog (user can Save as PDF) */
-function openPdfForJobs(profile, jobs){
-  if(!jobs || !jobs.length) return alert('No jobs to export');
-  const totals = jobs.reduce((acc,j)=>{ acc.sale+=j.sale; acc.cost+=j.cost; acc.profit+=j.profit; acc.eligible+=j.eligible; acc.comm+=j.commission; return acc; }, {sale:0,cost:0,profit:0,eligible:0,comm:0});
-  const title = `G2 Construction — Commission Report for ${profile}`;
-  let rows = '';
-  jobs.forEach(j=>{
-    rows += `<tr>
-      <td>${escapeHtml(j.jobName)}</td>
-      <td style="text-align:right">${j.sale.toFixed(2)}</td>
-      <td style="text-align:right">${j.cost.toFixed(2)}</td>
-      <td style="text-align:right">${j.profit.toFixed(2)}</td>
-      <td style="text-align:right">${j.thresh.toFixed(2)}</td>
-      <td style="text-align:right">${j.eligible.toFixed(2)}</td>
-      <td style="text-align:right">${j.commission.toFixed(2)}</td>
-    </tr>`;
-  });
-  const html = `
-    <html><head><title>${title}</title>
-    <style>
-      body{font-family:Arial,Helvetica,sans-serif;padding:20px;color:#0b1220}
-      header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-      .logo{font-weight:900;font-size:26px}
-      .n2{color:${'#0077b6'}}
-      h2{margin:0}
-      table{width:100%;border-collapse:collapse;margin-top:12px}
-      th,td{border:1px solid #ddd;padding:8px;font-size:13px}
-      th{background:#f7f9fb;text-align:left}
-      .totals{margin-top:12px;font-weight:700}
-    </style>
-    </head><body>
-      <header>
-        <div class="logo"><span style="color:black">G</span><span class="n2">2</span> Construction</div>
-        <div>
-          <div style="font-size:16px;font-weight:700">${title}</div>
-          <div style="font-size:12px;color:#666;margin-top:4px">Generated: ${new Date().toLocaleString()}</div>
-        </div>
-      </header>
-      <div><strong>Profile:</strong> ${escapeHtml(profile)}</div>
-      <table><thead>
-        <tr><th>Job</th><th style="text-align:right">Sale</th><th style="text-align:right">Cost</th><th style="text-align:right">Profit</th><th style="text-align:right">18% Threshold</th><th style="text-align:right">Eligible</th><th style="text-align:right">Commission</th></tr>
-      </thead><tbody>
-      ${rows}
-      </tbody></table>
-      <div class="totals">
-        Total Sale: ${totals.sale.toFixed(2)} — Total Cost: ${totals.cost.toFixed(2)} — Total Profit: ${totals.profit.toFixed(2)} — Total Commission: ${totals.comm.toFixed(2)}
-      </div>
-    </body></html>
-  `;
-  const w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  // give browser a moment to render, then trigger print
-  setTimeout(()=> { try{ w.focus(); w.print(); }catch(e){ /* ignore */ } }, 500);
-}
-document.getElementById('downloadAllPdf').addEventListener('click', ()=> {
-  const profile = profileSelect.value;
-  const jobs = loadJobs(profile);
-  if(!jobs.length) return alert('No jobs to include in PDF');
-  openPdfForJobs(profile, jobs);
-});
-
-/* =========================
-   Helpers & init
-   ========================= */
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-document.getElementById('sortHigh').addEventListener('click', ()=>{ sortMode='high'; renderHistory(); });
-document.getElementById('sortLow').addEventListener('click', ()=>{ sortMode='low'; renderHistory(); });
-document.getElementById('sortRecent').addEventListener('click', ()=>{ sortMode='recent'; renderHistory(); });
-
-/* Quick example buttons handler */
-document.querySelectorAll('[data-sale]').forEach(btn=>{
-  btn.addEventListener('click', (e)=>{
-    saleEl.value = btn.dataset.sale; costEl.value = btn.dataset.cost; updateQuickCalc();
-  });
-});
-
-/* initial */
-updateQuickCalc();
+function setProfile(profile){
+profileSelect.value=profile;
+localStorage.setItem('g2_lastProfile',profile);
+currentProfile.textContent=profile;
+filterSelect.style.display=profile==='Sam'?'inline-block':'none';
 renderHistory();
 updateTotals();
+}
+profileSelect.addEventListener('change',()=>setProfile(profileSelect.value));
+filterSelect.addEventListener('change',renderHistory);
+(function(){let last=localStorage.getItem('g2_lastProfile')||'David'; setProfile(last);})();
+
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  const profile=profileSelect.value;
+  const v=updateQuickCalc();
+  if(editingJobId){
+    // Edit existing job
+    let jobs=loadJobs(profile);
+    const idx=jobs.findIndex(j=>j.id===editingJobId);
+    if(idx>=0){
+      jobs[idx]={...jobs[idx],jobName:(jobEl.value||'Unnamed Job'),sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission};
+      saveJobs(profile,jobs);
+    }
+    editingJobId=null;
+  } else {
+    // New job
+    const entry={id:'id_'+Date.now()+'_'+Math.floor(Math.random()*9999),
+    jobName:(jobEl.value||'').trim()||'Unnamed Job',
+    sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission,
+    created:new Date().toISOString()};
+    let jobs=loadJobs(profile);
+    jobs.unshift(entry);
+    saveJobs(profile,jobs);
+  }
+  jobEl.value=''; saleEl.value=''; costEl.value='';
+  updateQuickCalc(); renderHistory(); updateTotals();
+});
+
+/* Render History with Edit/Delete */
+let sortMode='recent';
+document.getElementById('sortRecent').addEventListener('click',()=>{sortMode='recent';renderHistory();});
+document.getElementById('sortHigh').addEventListener('click',()=>{sortMode='high';renderHistory();});
+document.getElementById('sortLow').addEventListener('click',()=>{sortMode='low';renderHistory();});
+searchEl.addEventListener('input',renderHistory);
+
+function renderHistory(){
+  const profile=profileSelect.value;
+  const isSupervisor=profile==='Sam';
+  let jobs=[];
+  if(isSupervisor){
+    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
+    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
+  } else jobs=loadJobs(profile);
+
+  const q=(searchEl.value||'').toLowerCase();
+  if(q) jobs=jobs.filter(j=>(j.jobName||'').toLowerCase().includes(q));
+
+  if(sortMode==='high') jobs=jobs.slice().sort((a,b)=>b.commission - a.commission);
+  else if(sortMode==='low') jobs=jobs.slice().sort((a,b)=>a.commission - b.commission);
+
+  historyEl.innerHTML='';
+  if(!jobs.length){historyEl.innerHTML='<div class="muted">No jobs.</div>';return;}
+  jobs.forEach(j=>{
+    const d=document.createElement('div'); d.className='history-item';
+    const canEdit=(!isSupervisor && profile===profileSelect.value) || (isSupervisor && j._owner===profileSelect.value);
+    let buttons='';
+    if(canEdit) buttons=`<button class="edit-btn" onclick="editJob('${j.id}')">Edit</button><button class="delete-btn" onclick="deleteJob('${j.id}')">Delete</button>`;
+    d.innerHTML=`<div><b>${j.jobName}</b>${isSupervisor?` | Owner: ${j._owner}`:''}<br>Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)}</div><div>${money(j.commission)} ${buttons}</div>`;
+    historyEl.appendChild(d);
+  });
+  updateTotals();
+}
+
+/* Edit/Delete */
+function editJob(id){
+  const profile=profileSelect.value;
+  let jobs;
+  if(profile==='Sam'){ // find owner
+    let found=null;
+    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>{if(j.id===id)found={...j,owner:p};});});
+    if(!found)return;
+    if(found._owner!==profileSelect.value){alert("Cannot edit others' jobs"); return;}
+    jobs=loadJobs(profileSelect.value);
+  } else jobs=loadJobs(profile);
+  const job=jobs.find(j=>j.id===id); if(!job)return;
+  jobEl.value=job.jobName; saleEl.value=job.sale; costEl.value=job.cost;
+  editingJobId=id;
+  updateQuickCalc();
+}
+function deleteJob(id){
+  const profile=profileSelect.value;
+  if(profile==='Sam'){ // Sam cannot delete others' jobs
+    alert("Cannot delete others' jobs"); return;
+  }
+  let jobs=loadJobs(profile);
+  jobs=jobs.filter(j=>j.id!==id);
+  saveJobs(profile,jobs);
+  renderHistory(); updateTotals();
+}
+
+/* Totals */
+function updateTotals(){
+  const profile=profileSelect.value;
+  const isSupervisor=profile==='Sam';
+  let jobs=[];
+  if(isSupervisor){
+    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
+  } else jobs=loadJobs(profile);
+  let totalSales=0,totalProfit=0,totalComm=0;
+  jobs.forEach(j=>{totalSales+=j.sale;totalProfit+=j.profit;totalComm+=j.commission;});
+  document.getElementById('tSales').textContent=money(totalSales);
+  document.getElementById('tProfit').textContent=money(totalProfit);
+  document.getElementById('tComm').textContent=money(totalComm);
+}
+
+/* PDF/CSV Export */
+document.getElementById('exportPdf').addEventListener('click',()=>{
+  const profile=profileSelect.value;
+  const isSupervisor=profile==='Sam';
+  let jobs=[];
+  if(isSupervisor){
+    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
+    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
+  } else jobs=loadJobs(profile);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18); doc.text('G2 Construction Commission Report',10,15);
+  doc.setFontSize(12); doc.text(`Profile: ${profile}`,10,25);
+  let y=35;
+  jobs.forEach(j=>{
+    doc.text(`${j.jobName} | Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)} | Comm: ${money(j.commission)}${isSupervisor?` | Owner: ${j._owner}`:''}`,10,y);
+    y+=7;if(y>280){doc.addPage();y=15;}
+  });
+  doc.save(`G2_commissions_${profile}.pdf`);
+});
+
+document.getElementById('exportCsv').addEventListener('click',()=>{
+  const profile=profileSelect.value;
+  const isSupervisor=profile==='Sam';
+  let jobs=[];
+  if(isSupervisor){
+    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
+    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
+  } else jobs=loadJobs(profile);
+  let csv='Job Name,Sale,Cost,Profit,Eligible,Commission'+(isSupervisor?',Owner':'')+'\n';
+  jobs.forEach(j=>{csv+=`${j.jobName},${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}${isSupervisor?','+j._owner:''}\n`;});
+  const blob=new Blob([csv],{type:'text/csv'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download=`G2_commissions_${profile}.csv`;
+  link.click();
+});
 </script>
 </body>
 </html>
