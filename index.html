@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G2 Construction Commission Tracker</title>
+
+<!-- Cache-busting for iOS Home Screen -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
 <style>
   body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
   h1 { text-align:center; font-size:24px; margin-bottom:20px; }
@@ -50,148 +56,186 @@
   <div id="history">Loading...</div>
 </div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-let editingJobIndex = null;
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
+    authDomain: "g2-construction-commissi-35729.firebaseapp.com",
+    projectId: "g2-construction-commissi-35729",
+    storageBucket: "g2-construction-commissi-35729.firebasestorage.app",
+    messagingSenderId: "347759839953",
+    appId: "1:347759839953:web:b2ec2e14aee7c47e8cd3f0"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-// Load jobs from localStorage
-function getJobs() {
-  const jobs = JSON.parse(localStorage.getItem("jobs") || "[]");
-  return jobs;
-}
-
-function saveJobs(jobs) {
-  localStorage.setItem("jobs", JSON.stringify(jobs));
-}
-
-// Calculate commission
-document.getElementById('calcBtn').addEventListener('click', () => {
-  const sale = parseFloat(document.getElementById('sale').value) || 0;
-  const cost = parseFloat(document.getElementById('cost').value) || 0;
-  const profit = sale - cost;
-  const threshold = sale * 0.18;
-  const eligible = profit - threshold;
-  const commission = eligible > 0 ? eligible * 0.4 : 0;
-  document.getElementById('results').innerHTML = `
-    Profit: $${profit.toFixed(2)}<br>
-    Eligible: $${eligible.toFixed(2)}<br>
-    Commission: $${commission.toFixed(2)}
-  `;
-});
-
-// Save job
-document.getElementById('saveBtn').addEventListener('click', () => {
-  const profile = document.getElementById('profileSelect').value;
-  const jobName = document.getElementById('jobName').value.trim();
-  const sale = parseFloat(document.getElementById('sale').value) || 0;
-  const cost = parseFloat(document.getElementById('cost').value) || 0;
-
-  if(!jobName) return alert("Please enter a job name.");
-
-  const profit = sale - cost;
-  const threshold = sale * 0.18;
-  const eligible = profit - threshold;
-  const commission = eligible > 0 ? eligible * 0.4 : 0;
-
-  const jobData = {profile, jobName, sale, cost, profit, threshold, eligible, commission, created: Date.now()};
-
-  const jobs = getJobs();
-  if(editingJobIndex !== null){
-    jobs[editingJobIndex] = jobData;
-    editingJobIndex = null;
-  } else {
-    jobs.push(jobData);
-  }
-  saveJobs(jobs);
-
-  document.getElementById('jobName').value = '';
-  document.getElementById('sale').value = '';
-  document.getElementById('cost').value = '';
-  document.getElementById('results').textContent = '';
-  loadJobs();
-});
-
-// Load job history
-function loadJobs() {
-  const profile = document.getElementById('profileSelect').value;
-  const jobs = getJobs();
+  const profileSelect = document.getElementById('profileSelect');
+  const jobEl = document.getElementById('jobName');
+  const saleEl = document.getElementById('sale');
+  const costEl = document.getElementById('cost');
+  const resultsEl = document.getElementById('results');
   const historyEl = document.getElementById('history');
-  historyEl.innerHTML = '';
 
-  let filtered = jobs;
-  if(profile !== "Sam") {
-    filtered = jobs.filter(j => j.profile === profile);
-  }
+  let editingJobId = null;
 
-  if(filtered.length === 0){
-    historyEl.textContent = "No jobs yet.";
-    return;
-  }
-
-  filtered.sort((a,b)=> b.created - a.created);
-
-  filtered.forEach((j,i)=>{
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <div>
-        <b>${j.jobName}</b> (${j.profile})<br>
-        Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
-      </div>
-      <div>
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn">Delete</button>
-      </div>
+  // Calculate commission
+  document.getElementById('calcBtn').addEventListener('click', () => {
+    const sale = parseFloat(saleEl.value) || 0;
+    const cost = parseFloat(costEl.value) || 0;
+    const profit = sale - cost;
+    const threshold = sale * 0.18;
+    const eligible = profit - threshold;
+    const commission = eligible > 0 ? eligible * 0.4 : 0;
+    resultsEl.innerHTML = `
+      Profit: $${profit.toFixed(2)}<br>
+      Eligible: $${eligible.toFixed(2)}<br>
+      Commission: $${commission.toFixed(2)}
     `;
-    const [editBtn, delBtn] = div.querySelectorAll('button');
-    editBtn.addEventListener('click', ()=>{
-      editingJobIndex = jobs.indexOf(j);
-      document.getElementById('jobName').value = j.jobName;
-      document.getElementById('sale').value = j.sale;
-      document.getElementById('cost').value = j.cost;
-      document.getElementById('results').innerHTML = `
-        Profit: $${j.profit.toFixed(2)}<br>
-        Eligible: $${j.eligible.toFixed(2)}<br>
-        Commission: $${j.commission.toFixed(2)}
-      `;
-    });
-    delBtn.addEventListener('click', ()=>{
-      if(confirm("Delete this job?")){
-        jobs.splice(jobs.indexOf(j),1);
-        saveJobs(jobs);
-        loadJobs();
+  });
+
+  // Save job to Firestore
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const profile = profileSelect.value.trim();
+    const jobName = jobEl.value.trim();
+    const sale = parseFloat(saleEl.value) || 0;
+    const cost = parseFloat(costEl.value) || 0;
+
+    if (!jobName) return alert("Please enter a job name.");
+
+    const profit = sale - cost;
+    const threshold = sale * 0.18;
+    const eligible = profit - threshold;
+    const commission = eligible > 0 ? eligible * 0.4 : 0;
+
+    const jobData = {
+      profile,
+      jobName,
+      sale,
+      cost,
+      profit,
+      threshold,
+      eligible,
+      commission,
+      created: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+      if (editingJobId) {
+        await db.collection("jobs").doc(editingJobId).set(jobData);
+        editingJobId = null;
+      } else {
+        await db.collection("jobs").add(jobData);
       }
+
+      // Clear inputs
+      jobEl.value = '';
+      saleEl.value = '';
+      costEl.value = '';
+      resultsEl.textContent = '';
+
+      loadJobs();
+    } catch(err) {
+      console.error(err);
+      alert("Error saving job. Check Firebase console.");
+    }
+  });
+
+  // Load jobs
+  async function loadJobs() {
+    const profile = profileSelect.value.trim();
+    historyEl.innerHTML = "Loading...";
+
+    try {
+      let query = db.collection("jobs").orderBy("created", "desc");
+      if(profile !== "Sam") query = query.where("profile", "==", profile);
+
+      const snapshot = await query.get();
+      historyEl.innerHTML = '';
+
+      if(snapshot.empty){
+        historyEl.textContent = "No jobs yet.";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const j = doc.data();
+        j.id = doc.id;
+
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <div>
+            <b>${j.jobName}</b> (${j.profile})<br>
+            Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+          </div>
+          <div>
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          </div>
+        `;
+        const [editBtn, delBtn] = div.querySelectorAll('button');
+        editBtn.addEventListener('click', () => editJob(doc.id, j));
+        delBtn.addEventListener('click', () => deleteJob(doc.id));
+        historyEl.appendChild(div);
+      });
+    } catch(err) {
+      console.error(err);
+      historyEl.innerHTML = "Error loading jobs. Check internet connection.";
+    }
+  }
+
+  // Edit job
+  function editJob(id, job) {
+    editingJobId = id;
+    jobEl.value = job.jobName;
+    saleEl.value = job.sale;
+    costEl.value = job.cost;
+    resultsEl.innerHTML = `
+      Profit: $${job.profit.toFixed(2)}<br>
+      Eligible: $${job.eligible.toFixed(2)}<br>
+      Commission: $${job.commission.toFixed(2)}
+    `;
+  }
+
+  // Delete job
+  async function deleteJob(id) {
+    if(confirm("Delete this job?")){
+      await db.collection("jobs").doc(id).delete();
+      loadJobs();
+    }
+  }
+
+  // Export CSV
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const profile = profileSelect.value.trim();
+    let query = db.collection("jobs").orderBy("created", "desc");
+    if(profile !== "Sam") query = query.where("profile", "==", profile);
+
+    const snapshot = await query.get();
+    if(snapshot.empty) return alert("No jobs to export.");
+
+    let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
+    snapshot.forEach(doc => {
+      const j = doc.data();
+      csv += `"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
     });
-    historyEl.appendChild(div);
-  });
-}
 
-// Export CSV
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const jobs = getJobs();
-  const profile = document.getElementById('profileSelect').value;
-  let filtered = jobs;
-  if(profile !== "Sam") filtered = jobs.filter(j => j.profile === profile);
-
-  if(filtered.length===0) return alert("No jobs to export.");
-
-  let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
-  filtered.forEach(j=>{
-    csv += `"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "G2_Commission.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   });
 
-  const blob = new Blob([csv], {type:"text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "G2_Commission.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-});
+  profileSelect.addEventListener('change', loadJobs);
 
-// Change profile
-document.getElementById('profileSelect').addEventListener('change', loadJobs);
-
-// Initial load
-loadJobs();
+  // Initial load
+  loadJobs();
 </script>
 
 </body>
