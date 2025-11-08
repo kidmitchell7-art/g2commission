@@ -20,9 +20,11 @@ body{
   background:linear-gradient(180deg,#e9f2fb 0%,var(--bg) 100%);
   color:#0f172a;
   display:flex;
-  align-items:center;
   justify-content:center;
   padding:18px;
+  min-height:100vh;
+  overflow-y:auto;
+  padding-top: env(safe-area-inset-top, 20px);
 }
 .container{
   width:100%;
@@ -31,6 +33,7 @@ body{
   border-radius:14px;
   box-shadow:0 8px 30px rgba(15,23,42,0.08);
   padding:20px;
+  padding-top:60px;
 }
 header{
   display:flex;
@@ -40,7 +43,6 @@ header{
 }
 .logo{
   width:56px;height:56px;border-radius:10px;
-  background:linear-gradient(135deg,#ffffff,#ffffff);
   display:flex;align-items:center;justify-content:center;font-weight:700;
   font-size:22px;box-shadow:0 6px 18px rgba(2,6,23,0.12);
 }
@@ -87,7 +89,7 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
 <body>
 <div class="container">
 <header>
-  <div class="logo" aria-hidden="true"><span class="g">G</span><span class="n2">2</span></div>
+  <div class="logo"><span class="g">G</span><span class="n2">2</span></div>
   <div>
     <h1><span style="color:black;">G</span><span style="color:#0077b6;">2</span> Construction Commission Tracking</h1>
     <p class="lead">Earn 40% of profit over 18% of sale. Enter sale, cost, and job name — results update live.</p>
@@ -123,12 +125,12 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
 
   <div class="card">
     <div class="results" aria-live="polite">
-      <div class="result-line"><div class="muted">Sale price</div><div id="outSale" class="big">$28,706.00</div></div>
-      <div class="result-line"><div class="muted">Cost</div><div id="outCost" class="big">$20,000.00</div></div>
-      <div class="result-line"><div class="muted">Gross profit</div><div id="outProfit" class="big">$8,706.00</div></div>
-      <div class="result-line"><div class="muted">18% threshold</div><div id="outBase" class="big">$5,167.08</div></div>
-      <div class="result-line"><div class="muted">Eligible profit</div><div id="outEligible" class="big">$3,538.92</div></div>
-      <div class="result-line"><div class="muted">Commission (40%)</div><div id="outCommission" class="big green">$1,415.57</div></div>
+      <div class="result-line"><div class="muted">Sale price</div><div id="outSale" class="big">$0.00</div></div>
+      <div class="result-line"><div class="muted">Cost</div><div id="outCost" class="big">$0.00</div></div>
+      <div class="result-line"><div class="muted">Gross profit</div><div id="outProfit" class="big">$0.00</div></div>
+      <div class="result-line"><div class="muted">18% threshold</div><div id="outBase" class="big">$0.00</div></div>
+      <div class="result-line"><div class="muted">Eligible profit</div><div id="outEligible" class="big">$0.00</div></div>
+      <div class="result-line"><div class="muted">Commission (40%)</div><div id="outCommission" class="big green">$0.00</div></div>
     </div>
 
     <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
@@ -153,162 +155,111 @@ a.small{font-size:13px;color:var(--accent);text-decoration:none}
 
 <div class="foot">
   <div class="note">Formula: commission = 40% × max(0, (sale - cost) - 18% × sale)</div>
-  <div><a class="small" href="#" id="aboutLink">About</a></div>
+</div>
 </div>
 
 <script>
-(function(){
-  const BASE_PCT = 0.18;
-  const COMM_PCT = 0.40;
+function format(n){return n.toLocaleString('en-US',{style:'currency',currency:'USD'})}
+function calc(){
+  const sale=parseFloat(document.getElementById('sale').value)||0;
+  const cost=parseFloat(document.getElementById('cost').value)||0;
+  const profit=sale-cost;
+  const base=sale*0.18;
+  const eligible=Math.max(0,profit-base);
+  const commission=eligible*0.4;
+  document.getElementById('outSale').textContent=format(sale);
+  document.getElementById('outCost').textContent=format(cost);
+  document.getElementById('outProfit').textContent=format(profit);
+  document.getElementById('outBase').textContent=format(base);
+  document.getElementById('outEligible').textContent=format(eligible);
+  document.getElementById('outCommission').textContent=format(commission);
+  return {sale,cost,profit,base,eligible,commission};
+}
 
-  const saleEl = document.getElementById('sale');
-  const costEl = document.getElementById('cost');
-  const jobEl = document.getElementById('jobName');
-  const outSale = document.getElementById('outSale');
-  const outCost = document.getElementById('outCost');
-  const outProfit = document.getElementById('outProfit');
-  const outBase = document.getElementById('outBase');
-  const outEligible = document.getElementById('outEligible');
-  const outCommission = document.getElementById('outCommission');
-  const calcBtn = document.getElementById('calcBtn');
-  const copyBtn = document.getElementById('copyBtn');
-  const exportBtn = document.getElementById('exportBtn');
-  const saveBtn = document.getElementById('saveBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const historyEl = document.getElementById('history');
-  const clearHistoryBtn = document.getElementById('clearHistory');
-  const statsEl = document.getElementById('stats');
-  const searchEl = document.getElementById('searchHistory');
-
-  let sortMode = 'recent';
-
-  function toNumber(v){ return isFinite(Number(v)) ? Number(v) : 0; }
-  function money(n){ return n.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
-  function calc(sale, cost){
-    sale = toNumber(sale);
-    cost = toNumber(cost);
-    const profit = sale - cost;
-    const base = sale * BASE_PCT;
-    const eligible = Math.max(0, profit - base);
-    const commission = eligible * COMM_PCT;
-    return { sale, cost, profit, base, eligible, commission };
-  }
-
-  function updateAll(){
-    const r = calc(saleEl.value, costEl.value);
-    outSale.textContent = '$' + money(r.sale);
-    outCost.textContent = '$' + money(r.cost);
-    outProfit.textContent = '$' + money(r.profit);
-    outBase.textContent = '$' + money(r.base);
-    outEligible.textContent = '$' + money(r.eligible);
-    outCommission.textContent = '$' + money(r.commission);
-  }
-
-  const STORAGE_KEY = 'g2_commission_history_v6';
-  function loadHistory(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return [];} }
-  function saveHistory(arr){ localStorage.setItem(STORAGE_KEY,JSON.stringify(arr)); renderHistory(); }
-
-  function addHistory(entry){
-    const arr = loadHistory();
-    arr.unshift(entry);
-    if(arr.length>200) arr.length=200;
-    saveHistory(arr);
-  }
-
-  function clearHistory(){ localStorage.removeItem(STORAGE_KEY); renderHistory(); }
-
-  function editHistory(index){
-    const arr = loadHistory();
-    const newName = prompt('Edit Job Name', arr[index].jobName);
-    if(newName!==null){
-      arr[index].jobName=newName.trim()||'Unnamed Job';
-      saveHistory(arr);
-      saleEl.value = arr[index].sale;
-      costEl.value = arr[index].cost;
-      jobEl.value = arr[index].jobName;
-      updateAll();
-    }
-  }
-
-  function deleteHistory(index){
-    const arr = loadHistory();
-    if(confirm(`Delete "${arr[index].jobName}"?`)){
-      arr.splice(index,1);
-      saveHistory(arr);
-    }
-  }
-
-  function renderHistory(){
-    const arr = loadHistory();
-    let filtered = arr;
-
-    const query = searchEl.value.trim().toLowerCase();
-    if(query) filtered = arr.filter(it => it.jobName.toLowerCase().includes(query));
-
-    if(sortMode==='high') filtered.sort((a,b)=>b.commission-a.commission);
-    else if(sortMode==='low') filtered.sort((a,b)=>a.commission-b.commission);
-
-    historyEl.innerHTML = '';
-    if(!filtered.length){ historyEl.innerHTML='<div class="muted">No saved history.</div>'; statsEl.textContent=''; return; }
-
-    let total = 0;
-    filtered.forEach((it,i)=>{
-      total+=it.commission;
-      const div = document.createElement('div'); div.className='history-item';
-      div.innerHTML = `
-        <div style="flex:1">
-          <div style="font-weight:700">${it.jobName}</div>
-          <div class="muted" style="font-size:12px;margin-top:2px">Sale: $${money(it.sale)} | Cost: $${money(it.cost)} | Eligible: $${money(it.eligible)}</div>
-          <div class="muted" style="font-size:12px">${it.timestamp}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div style="font-weight:700;color:#0f5132">$${money(it.commission)}</div>
-          <button style="font-size:12px;padding:2px 6px;border-radius:4px" onclick="editHistory(${i})">Edit</button>
-          <button style="font-size:12px;padding:2px 6px;border-radius:4px;color:#dc2626" onclick="deleteHistory(${i})">Delete</button>
-        </div>`;
-      historyEl.appendChild(div);
-    });
-    statsEl.textContent='Saved Jobs: '+filtered.length+' | Total Commission: $'+money(total);
-  }
-
-  window.editHistory = editHistory;
-  window.deleteHistory = deleteHistory;
-
-  document.querySelectorAll('.small-row button[data-sale]').forEach(b=>{
-    b.addEventListener('click', ()=>{ saleEl.value=b.dataset.sale; costEl.value=b.dataset.cost; updateAll(); });
+function loadHistory(){
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  renderHistory(h);
+}
+function saveHistory(entry){
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  h.unshift(entry);
+  localStorage.setItem('commHistory',JSON.stringify(h));
+  renderHistory(h);
+}
+function renderHistory(list){
+  const c=document.getElementById('history');
+  c.innerHTML='';
+  list.forEach((item,i)=>{
+    const d=document.createElement('div');
+    d.className='history-item';
+    d.innerHTML=`
+      <div><strong>${item.job||'Unnamed Job'}</strong><br>
+      Sale: ${format(item.sale)} | Cost: ${format(item.cost)} | Comm: <span class='green'>${format(item.commission)}</span></div>
+      <div><button onclick='editHistory(${i})'>Edit</button> <button onclick='delHistory(${i})'>X</button></div>`;
+    c.appendChild(d);
   });
+  const total=list.reduce((a,b)=>a+b.commission,0);
+  document.getElementById('stats').textContent=`Total commissions: ${format(total)} (${list.length} jobs)`;
+}
+function editHistory(i){
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  const item=h[i];
+  document.getElementById('sale').value=item.sale;
+  document.getElementById('cost').value=item.cost;
+  document.getElementById('jobName').value=item.job;
+  calc();
+}
+function delHistory(i){
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  h.splice(i,1);
+  localStorage.setItem('commHistory',JSON.stringify(h));
+  renderHistory(h);
+}
 
-  calcBtn.addEventListener('click', updateAll);
-  saleEl.addEventListener('input', updateAll);
-  costEl.addEventListener('input', updateAll);
+document.getElementById('calcBtn').onclick=calc;
+document.getElementById('saveBtn').onclick=()=>{
+  const {sale,cost,commission}=calc();
+  const job=document.getElementById('jobName').value.trim()||'Unnamed Job';
+  const entry={job,sale,cost,commission};
+  saveHistory(entry);
+};
+document.getElementById('clearHistory').onclick=()=>{localStorage.removeItem('commHistory');loadHistory();}
+document.getElementById('resetBtn').onclick=()=>{document.getElementById('sale').value='';document.getElementById('cost').value='';document.getElementById('jobName').value='';calc();}
+document.querySelectorAll('[data-sale]').forEach(btn=>{
+  btn.onclick=()=>{document.getElementById('sale').value=btn.dataset.sale;document.getElementById('cost').value=btn.dataset.cost;calc();}
+});
+document.getElementById('copyBtn').onclick=()=>{
+  const c=document.getElementById('outCommission').textContent;
+  navigator.clipboard.writeText(c);
+  alert('Copied '+c);
+}
+document.getElementById('exportBtn').onclick=()=>{
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  let csv='Job,Sale,Cost,Commission\n';
+  h.forEach(i=>{csv+=`${i.job},${i.sale},${i.cost},${i.commission}\n`;});
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='commissions.csv';
+  a.click();
+}
+document.getElementById('searchHistory').oninput=(e)=>{
+  const term=e.target.value.toLowerCase();
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  renderHistory(h.filter(i=>i.job.toLowerCase().includes(term)));
+}
+document.getElementById('sortRecent').onclick=loadHistory;
+document.getElementById('sortHigh').onclick=()=>{
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  renderHistory([...h].sort((a,b)=>b.commission-a.commission));
+}
+document.getElementById('sortLow').onclick=()=>{
+  const h=JSON.parse(localStorage.getItem('commHistory')||'[]');
+  renderHistory([...h].sort((a,b)=>a.commission-b.commission));
+}
 
-  saveBtn.addEventListener('click', ()=>{
-    const r = calc(saleEl.value, costEl.value);
-    const jobName = jobEl.value.trim()||'Unnamed Job';
-    addHistory({ jobName, timestamp: new Date().toLocaleString(), sale:r.sale, cost:r.cost, profit:r.profit, base:r.base, eligible:r.eligible, commission:r.commission });
-    saveBtn.textContent='Saved!'; setTimeout(()=>saveBtn.textContent='Save to History',900);
-  });
-
-  clearHistoryBtn.addEventListener('click', ()=>{ if(confirm('Clear all saved history?')) clearHistory(); });
-
-  copyBtn.addEventListener('click', ()=>{
-    const text=outCommission.textContent+' — Commission for '+jobEl.value+' ($'+money(saleEl.value)+' / $'+money(costEl.value)+')';
-    navigator.clipboard?.writeText(text).then(()=>{ copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy Commission',1200); });
-  });
-
-  exportBtn.addEventListener('click', ()=>{
-    const arr = loadHistory(); if(!arr.length){ alert('No history to export.'); return; }
-    const rows=[['Job Name','Timestamp','Sale','Cost','Profit','Threshold','Eligible','Commission']];
-    arr.forEach(it=>rows.push([it.jobName,it.timestamp,it.sale.toFixed(2),it.cost.toFixed(2),it.profit.toFixed(2),it.base.toFixed(2),it.eligible.toFixed(2),it.commission.toFixed(2)].join(',')));
-    const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='g2commission-history.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  });
-
-  resetBtn.addEventListener('click', ()=>{ saleEl.value=''; costEl.value=''; jobEl.value=''; updateAll(); });
-
-  searchEl.addEventListener('input', renderHistory);
-  document.getElementById('sortRecent').addEventListener('click', ()=>{ sortMode='recent'; renderHistory(); });
-  document.getElementById('sortHigh').addEventListener('click', ()=>{ sortMode='high'; renderHistory(); });
-  document.getElementById('sortLow').addEventListener('click', ()=>{ sortMode='low'; renderHistory(); });
-
-  document.getElementById('aboutLink').addEventListener('click', e=>{ e.preventDefault(); alert('G2 Construction Commission Tracking\nFormula: commission = 0.40 × max(0, (sale - cost) - 0.18 × sale)\nLocal
+calc();
+loadHistory();
+</script>
+</body>
+</html>
