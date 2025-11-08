@@ -138,13 +138,20 @@ async function loadJobs(){
         const profileFilterVal = filterProfile.value;
         const selectedProfile = profileSelect.value;
 
+        let totalSales = 0;
+        let totalCommission = 0;
+
         snapshot.forEach(doc=>{
-            const j = doc.data(); j.id = doc.id;
+            const j = doc.data(); 
+            j.id = doc.id;
 
             // Filter logic
             if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
             if(jobNameFilter && !j.jobName.toLowerCase().includes(jobNameFilter)) return;
             if(profileFilterVal && j.profile!==profileFilterVal) return;
+
+            totalSales += j.sale;
+            totalCommission += j.commission;
 
             const div = document.createElement('div');
             div.innerHTML = `<div><b>${j.jobName}</b> (${j.profile})<br>Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Commission: $${j.commission.toFixed(2)}</div>
@@ -161,12 +168,24 @@ async function loadJobs(){
                     loadJobs();
                 }
             });
+
             historyEl.appendChild(div);
         });
-    }catch(err){console.error(err); historyEl.textContent="Error loading jobs. Check internet connection.";}
+
+        // Add totals summary
+        const totalsDiv = document.createElement('div');
+        totalsDiv.style.fontWeight = 'bold';
+        totalsDiv.style.marginTop = '10px';
+        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)}`;
+        historyEl.appendChild(totalsDiv);
+
+    }catch(err){
+        console.error(err); 
+        historyEl.textContent="Error loading jobs. Check internet connection.";
+    }
 }
 
-// Export CSV
+// Export CSV with totals
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
     let query = db.collection("jobs").orderBy("created","desc");
     const snapshot = await query.get();
@@ -176,12 +195,18 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const profileFilterVal = filterProfile.value;
 
     let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
+    let totalSales=0, totalCommission=0;
+
     snapshot.forEach(doc=>{
         const j = doc.data();
         if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
         if(profileFilterVal && j.profile!==profileFilterVal) return;
         csv+=`"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
+        totalSales += j.sale;
+        totalCommission += j.commission;
     });
+
+    csv += `Totals,,${totalSales.toFixed(2)},,, ,${totalCommission.toFixed(2)}\n`;
 
     const blob = new Blob([csv], {type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -190,7 +215,6 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     URL.revokeObjectURL(url);
 });
 
-// Event listeners for filtering
 filterJobName.addEventListener('input', loadJobs);
 filterProfile.addEventListener('change', loadJobs);
 profileSelect.addEventListener('change', loadJobs);
