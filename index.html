@@ -147,6 +147,7 @@ document.getElementById('calcBtn').addEventListener('click',updateQuickCalc);
 [saleEl,costEl].forEach(i=>i.addEventListener('input',updateQuickCalc));
 document.getElementById('clearBtn').addEventListener('click',()=>{saleEl.value='';costEl.value='';jobEl.value='';editingJobId=null;updateQuickCalc();});
 
+// ---------- Profiles ----------
 function setProfile(profile){
 profileSelect.value=profile;
 localStorage.setItem('g2_lastProfile',profile);
@@ -159,167 +160,112 @@ profileSelect.addEventListener('change',()=>setProfile(profileSelect.value));
 filterSelect.addEventListener('change',renderHistory);
 (function(){let last=localStorage.getItem('g2_lastProfile')||'David'; setProfile(last);})();
 
-document.getElementById('saveBtn').addEventListener('click',()=>{
-  const profile=profileSelect.value;
-  const v=updateQuickCalc();
+// ---------- Save Job ----------
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  const profile = profileSelect.value;
+  const v = updateQuickCalc();
+  if(!jobEl.value.trim()){ alert('Please enter a Job Name.'); return; }
+  let jobs = loadJobs(profile);
   if(editingJobId){
-    let jobs=loadJobs(profile);
-    const idx=jobs.findIndex(j=>j.id===editingJobId);
-    if(idx>=0){
-      jobs[idx]={...jobs[idx],jobName:(jobEl.value||'Unnamed Job'),sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission};
-      saveJobs(profile,jobs);
-    }
-    editingJobId=null;
+    const idx = jobs.findIndex(j=>j.id===editingJobId);
+    if(idx>=0){ jobs[idx]={...jobs[idx],jobName:jobEl.value.trim(),sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission}; editingJobId=null; }
   } else {
-    const entry={id:'id_'+Date.now()+'_'+Math.floor(Math.random()*9999),
-    jobName:(jobEl.value||'').trim()||'Unnamed Job',
-    sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission,
-    created:new Date().toISOString()};
-    let jobs=loadJobs(profile);
-    jobs.unshift(entry);
-    saveJobs(profile,jobs);
+    jobs.unshift({id:'id_'+Date.now()+'_'+Math.floor(Math.random()*9999),jobName:jobEl.value.trim(),sale:v.sale,cost:v.cost,profit:v.profit,thresh:v.thresh,eligible:v.eligible,commission:v.commission,created:new Date().toISOString()});
   }
+  saveJobs(profile,jobs);
   jobEl.value=''; saleEl.value=''; costEl.value='';
   updateQuickCalc(); renderHistory(); updateTotals();
 });
 
-/* Render History with dynamic buttons */
-let sortMode='recent';
-document.getElementById('sortRecent').addEventListener('click',()=>{sortMode='recent';renderHistory();});
-document.getElementById('sortHigh').addEventListener('click',()=>{sortMode='high';renderHistory();});
-document.getElementById('sortLow').addEventListener('click',()=>{sortMode='low';renderHistory();});
-searchEl.addEventListener('input',renderHistory);
-
+// ---------- Render History ----------
 function renderHistory(){
-  const profile=profileSelect.value;
-  const isSupervisor=profile==='Sam';
+  let profile = profileSelect.value;
   let jobs=[];
-  if(isSupervisor){
-    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
-    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
-  } else jobs=loadJobs(profile);
-
-  const q=(searchEl.value||'').toLowerCase();
-  if(q) jobs=jobs.filter(j=>(j.jobName||'').toLowerCase().includes(q));
-
-  if(sortMode==='high') jobs=jobs.slice().sort((a,b)=>b.commission - a.commission);
-  else if(sortMode==='low') jobs=jobs.slice().sort((a,b)=>a.commission - b.commission);
-
+  if(profile==='Sam'){
+    let f=filterSelect.value;
+    jobs=PROFILES.filter(p=>f==='all'?true:p===f).flatMap(p=>loadJobs(p).map(j=>({...j,profile:p})));
+  } else jobs=loadJobs(profile).map(j=>({...j,profile:profile}));
+  const s=searchEl.value.toLowerCase();
+  if(s) jobs=jobs.filter(j=>j.jobName.toLowerCase().includes(s));
+  jobs.sort((a,b)=>new Date(b.created)-new Date(a.created));
   historyEl.innerHTML='';
-  if(!jobs.length){historyEl.innerHTML='<div class="muted">No jobs.</div>';return;}
   jobs.forEach(j=>{
-    const d=document.createElement('div'); d.className='history-item';
-    d.innerHTML=`<div><b>${j.jobName}</b>${isSupervisor?` | Owner: ${j._owner}`:''}<br>Sale: ${money(j.sale)} | Cost: ${money(j.cost)} | Eligible: ${money(j.eligible)}</div><div>${money(j.commission)}</div>`;
-    const canEdit=!isSupervisor || (j._owner && j._owner===profileSelect.value);
-    if(canEdit){
-      const btnEdit=document.createElement('button'); btnEdit.textContent='Edit'; btnEdit.className='edit-btn';
-      btnEdit.addEventListener('click',()=>editJob(j));
-      const btnDel=document.createElement('button'); btnDel.textContent='Delete'; btnDel.className='delete-btn';
-      btnDel.addEventListener('click',()=>deleteJob(j));
-      d.lastChild.appendChild(btnEdit);
-      d.lastChild.appendChild(btnDel);
-    }
-    historyEl.appendChild(d);
+    const div=document.createElement('div');
+    div.className='history-item';
+    div.innerHTML=`<div><strong>${j.jobName}</strong> (${j.profile}) - ${money(j.commission)}</div>
+    <div>
+    <button class="edit-btn">Edit</button>
+    <button class="delete-btn">Delete</button>
+    </div>`;
+    div.querySelector('.edit-btn').addEventListener('click',()=>{editingJobId=j.id;jobEl.value=j.jobName;saleEl.value=j.sale;costEl.value=j.cost;updateQuickCalc();});
+    div.querySelector('.delete-btn').addEventListener('click',()=>{if(confirm('Delete this job?')){let arr=loadJobs(j.profile);arr=arr.filter(x=>x.id!==j.id);saveJobs(j.profile,arr);renderHistory();updateTotals();}});
+    historyEl.appendChild(div);
   });
-  updateTotals();
 }
 
-/* Edit/Delete functions */
-function editJob(job){
-  const profile=profileSelect.value;
-  if(profile==='Sam' && job._owner!==profile){ alert("Cannot edit others' jobs"); return; }
-  editingJobId=job.id;
-  jobEl.value=job.jobName; saleEl.value=job.sale; costEl.value=job.cost;
-  updateQuickCalc();
-}
-function deleteJob(job){
-  const profile=profileSelect.value;
-  if(profile==='Sam' && job._owner!==profile){ alert("Cannot delete others' jobs"); return; }
-  let jobs;
-  if(job._owner) jobs=loadJobs(job._owner);
-  else jobs=loadJobs(profile);
-  jobs=jobs.filter(j=>j.id!==job.id);
-  if(job._owner) saveJobs(job._owner,jobs); else saveJobs(profile,jobs);
-  renderHistory(); updateTotals();
-}
-
-/* Totals */
+// ---------- Totals ----------
 function updateTotals(){
-  const profile=profileSelect.value;
-  const isSupervisor=profile==='Sam';
+  let profile=profileSelect.value;
   let jobs=[];
-  if(isSupervisor){
-    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
+  if(profile==='Sam'){
+    let f=filterSelect.value;
+    jobs=PROFILES.filter(p=>f==='all'?true:p===f).flatMap(p=>loadJobs(p));
   } else jobs=loadJobs(profile);
-  let totalSales=0,totalProfit=0,totalComm=0;
-  jobs.forEach(j=>{totalSales+=j.sale;totalProfit+=j.profit;totalComm+=j.commission;});
-  document.getElementById('tSales').textContent=money(totalSales);
-  document.getElementById('tProfit').textContent=money(totalProfit);
-  document.getElementById('tComm').textContent=money(totalComm);
+  let tSale=tProfit=tComm=0;
+  jobs.forEach(j=>{tSale+=j.sale;tProfit+=j.profit;tComm+=j.commission;});
+  document.getElementById('tSales').textContent=money(tSale);
+  document.getElementById('tProfit').textContent=money(tProfit);
+  document.getElementById('tComm').textContent=money(tComm);
 }
 
-/* PDF Export - Professional Table */
-document.getElementById('exportPdf').addEventListener('click',()=>{
-  const profile=profileSelect.value;
-  const isSupervisor=profile==='Sam';
-  let jobs=[];
-  if(isSupervisor){
-    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
-    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
-  } else jobs=loadJobs(profile);
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(20); doc.setTextColor(0, 119, 182); doc.text('G2 Construction',10,15);
-  doc.setTextColor(0,0,0); doc.setFontSize(14); doc.text(`Commission Report - ${profile}`,10,25);
-
-  // Table headers
-  const startY=35;
-  let y=startY;
-  doc.setFontSize(12);
-  doc.text('Job Name',10,y);
-  if(isSupervisor) doc.text('Owner',60,y);
-  doc.text('Sale',100,y);
-  doc.text('Cost',130,y);
-  doc.text('Profit',160,y);
-  doc.text('Eligible',185,y);
-  doc.text('Commission',210,y);
-  y+=6;
-  doc.setDrawColor(0); doc.line(10,y-2,210,y-2);
-
-  let totalSales=0,totalProfit=0,totalComm=0;
-  jobs.forEach(j=>{
-    if(y>280){doc.addPage(); y=20;}
-    doc.text(j.jobName,10,y);
-    if(isSupervisor) doc.text(j._owner,60,y);
-    doc.text(money(j.sale),100,y);
-    doc.text(money(j.cost),130,y);
-    doc.text(money(j.profit),160,y);
-    doc.text(money(j.eligible),185,y);
-    doc.text(money(j.commission),210,y);
-    y+=6;
-    totalSales+=j.sale; totalProfit+=j.profit; totalComm+=j.commission;
-  });
-  y+=10;
-  doc.setFontSize(14); doc.text(`Totals: Sale ${money(totalSales)} | Profit ${money(totalProfit)} | Commission ${money(totalComm)}`,10,y);
-
-  doc.save(`G2_commissions_${profile}.pdf`);
+// ---------- Search & Sort ----------
+searchEl.addEventListener('input',renderHistory);
+document.getElementById('sortRecent').addEventListener('click',()=>renderHistory());
+document.getElementById('sortHigh').addEventListener('click',()=>{
+  let items=[...historyEl.children].sort((a,b)=>parseFloat(b.textContent.match(/\$([\d,.]+)/)[1].replace(/,/g,''))-parseFloat(a.textContent.match(/\$([\d,.]+)/)[1].replace(/,/g,'')));
+  historyEl.innerHTML=''; items.forEach(i=>historyEl.appendChild(i));
+});
+document.getElementById('sortLow').addEventListener('click',()=>{
+  let items=[...historyEl.children].sort((a,b)=>parseFloat(a.textContent.match(/\$([\d,.]+)/)[1].replace(/,/g,''))-parseFloat(b.textContent.match(/\$([\d,.]+)/)[1].replace(/,/g,'')));
+  historyEl.innerHTML=''; items.forEach(i=>historyEl.appendChild(i));
 });
 
-/* CSV Export */
-document.getElementById('exportCsv').addEventListener('click',()=>{
-  const profile=profileSelect.value;
-  const isSupervisor=profile==='Sam';
+// ---------- PDF & CSV ----------
+document.getElementById('exportPdf').addEventListener('click',()=>{
+  const { jsPDF } = window.jspdf;
+  let doc=new jsPDF();
+  doc.setFontSize(18);
+  doc.text("G2 Construction Commission Report",10,10);
+  doc.setFontSize(12);
+  let y=20;
   let jobs=[];
-  if(isSupervisor){
-    PROFILES.filter(p=>p!=='Sam').forEach(p=>{const pj=loadJobs(p);pj.forEach(j=>j._owner=p);jobs=jobs.concat(pj);});
-    const filter=filterSelect.value;if(filter!=='all')jobs=jobs.filter(j=>j._owner===filter);
-  } else jobs=loadJobs(profile);
-  let csv='Job Name,Sale,Cost,Profit,Eligible,Commission'+(isSupervisor?',Owner':'')+'\n';
-  jobs.forEach(j=>{csv+=`${j.jobName},${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}${isSupervisor?','+j._owner:''}\n`;});  const blob=new Blob([csv],{type:'text/csv'});
+  let profile=profileSelect.value;
+  if(profile==='Sam'){
+    let f=filterSelect.value;
+    jobs=PROFILES.filter(p=>f==='all'?true:p===f).flatMap(p=>loadJobs(p).map(j=>({...j,profile:p})));
+  } else jobs=loadJobs(profile).map(j=>({...j,profile:profile}));
+  jobs.forEach(j=>{
+    doc.text(`${j.jobName} (${j.profile}) Sale: ${money(j.sale)}, Cost: ${money(j.cost)}, Comm: ${money(j.commission)}`,10,y); y+=6;
+    if(y>280){doc.addPage();y=10;}
+  });
+  let tSale=tProfit=tComm=0; jobs.forEach(j=>{tSale+=j.sale;tProfit+=j.profit;tComm+=j.commission;});
+  doc.text(`Totals - Sale: ${money(tSale)}, Profit: ${money(tProfit)}, Commission: ${money(tComm)}`,10,y+6);
+  doc.save(`G2_Commissions_${profile}.pdf`);
+});
+
+document.getElementById('exportCsv').addEventListener('click',()=>{
+  let profile=profileSelect.value;
+  let jobs=[];
+  if(profile==='Sam'){
+    let f=filterSelect.value;
+    jobs=PROFILES.filter(p=>f==='all'?true:p===f).flatMap(p=>loadJobs(p).map(j=>({...j,profile:p})));
+  } else jobs=loadJobs(profile).map(j=>({...j,profile:profile}));
+  let csv='Job Name,Profile,Sale,Cost,Profit,Commission\n';
+  jobs.forEach(j=>{csv+=`${j.jobName},${j.profile},${j.sale},${j.cost},${j.profit},${j.commission}\n`;});
+  const blob=new Blob([csv],{type:'text/csv'});
   const link=document.createElement('a');
   link.href=URL.createObjectURL(blob);
-  link.download=`G2_commissions_${profile}.csv`;
+  link.download=`G2_Commissions_${profile}.csv`;
   link.click();
 });
 </script>
