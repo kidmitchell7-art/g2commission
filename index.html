@@ -92,7 +92,7 @@
 
   // Save job
   document.getElementById('saveBtn').addEventListener('click', async () => {
-    const profile = profileSelect.value;
+    const profile = profileSelect.value.trim(); // ensure exact match
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value) || 0;
     const cost = parseFloat(costEl.value) || 0;
@@ -123,11 +123,13 @@
       } else {
         await db.collection("jobs").add(jobData);
       }
+
       // Clear fields
       jobEl.value = '';
       saleEl.value = '';
       costEl.value = '';
       resultsEl.textContent = '';
+
       // Reload jobs AFTER save completes
       await loadJobs();
     } catch (err) {
@@ -138,7 +140,7 @@
 
   // Load jobs
   async function loadJobs() {
-    const profile = profileSelect.value;
+    const profile = profileSelect.value.trim();
     historyEl.innerHTML = "Loading...";
     try {
       const snapshot = await db.collection("jobs").orderBy("created", "desc").get();
@@ -146,8 +148,11 @@
       snapshot.forEach(doc => {
         const j = doc.data();
         j.id = doc.id;
-        // Filter jobs for profile
-        if (profile === "Sam" || j.profile === profile) {
+
+        // Debugging log
+        console.log("Loading job:", j.jobName, "Profile:", j.profile);
+
+        if (profile === "Sam" || j.profile.toLowerCase() === profile.toLowerCase()) {
           const div = document.createElement('div');
           div.innerHTML = `
             <div>
