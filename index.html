@@ -106,38 +106,49 @@ let editingJobId = null;
 /* Helpers */
 function getYearQuarter(ts){
   const d = ts.toDate();
-  const y = d.getFullYear();
-  const m = d.getMonth()+1;
-  let q="Q1";
-  if(m>=4&&m<=6) q="Q2";
-  else if(m>=7&&m<=9) q="Q3";
-  else if(m>=10) q="Q4";
-  return {year:y, quarter:q};
+  const year = d.getFullYear();
+  const month = d.getMonth()+1;
+  let quarter="Q1";
+  if(month>=4&&month<=6) quarter="Q2";
+  else if(month>=7&&month<=9) quarter="Q3";
+  else if(month>=10) quarter="Q4";
+  return {year,quarter};
 }
 
-/* Commission calc */
-document.getElementById('calcBtn').onclick=()=>{
-  const sale=+saleEl.value||0;
-  const cost=+costEl.value||0;
-  const profit=Math.max(0,sale-cost);
-  const eligible=Math.max(0,profit-(sale*0.18));
-  const commission=eligible*0.4;
-  resultsEl.innerHTML=`Profit: $${profit.toFixed(2)}<br>Eligible: $${eligible.toFixed(2)}<br>Commission: $${commission.toFixed(2)}`;
+/* Commission calc — 20% RULE */
+function calculateCommission(sale, cost){
+  const profit = Math.max(0, sale - cost);
+  const eligible = Math.max(0, profit - (sale * 0.20));
+  const commission = eligible * 0.40;
+  return { profit, eligible, commission };
+}
+
+/* Preview calculation */
+document.getElementById('calcBtn').onclick = () => {
+  const sale = +saleEl.value || 0;
+  const cost = +costEl.value || 0;
+  const { profit, eligible, commission } = calculateCommission(sale, cost);
+  resultsEl.innerHTML =
+    `Profit: $${profit.toFixed(2)}<br>
+     Eligible: $${eligible.toFixed(2)}<br>
+     Commission: $${commission.toFixed(2)}`;
 };
 
-/* Save */
-document.getElementById('saveBtn').onclick=async()=>{
-  const profile=profileSelect.value;
+/* Save Job */
+document.getElementById('saveBtn').onclick = async () => {
+  const profile = profileSelect.value;
   if(profile==="ViewAll") return alert("Select a profile.");
-  const jobName=jobEl.value.trim();
+  const jobName = jobEl.value.trim();
   if(!jobName) return alert("Enter job name.");
-  const sale=+saleEl.value||0;
-  const cost=+costEl.value||0;
-  const profit=Math.max(0,sale-cost);
-  const eligible=Math.max(0,profit-(sale*0.18));
-  const commission=eligible*0.4;
 
-  const data={profile,jobName,sale,cost,profit,eligible,commission,created:firebase.firestore.FieldValue.serverTimestamp()};
+  const sale = +saleEl.value || 0;
+  const cost = +costEl.value || 0;
+  const { profit, eligible, commission } = calculateCommission(sale, cost);
+
+  const data = {
+    profile, jobName, sale, cost, profit, eligible, commission,
+    created: firebase.firestore.FieldValue.serverTimestamp()
+  };
 
   editingJobId
     ? await db.collection("jobs").doc(editingJobId).set(data)
@@ -149,12 +160,30 @@ document.getElementById('saveBtn').onclick=async()=>{
   loadJobs();
 };
 
+/* 🔁 RE-CALCULATE EXISTING JOBS */
+document.getElementById('recalcBtn').onclick = async () => {
+  if(!confirm("Recalculate ALL jobs using the new 20% rule?")) return;
+
+  const snap = await db.collection("jobs").get();
+  const batch = db.batch();
+
+  snap.forEach(doc=>{
+    const j = doc.data();
+    const { profit, eligible, commission } = calculateCommission(j.sale, j.cost);
+    batch.update(doc.ref, { profit, eligible, commission });
+  });
+
+  await batch.commit();
+  alert("All jobs recalculated using 20% rule.");
+  loadJobs();
+};
+
 /* Load Jobs */
 async function loadJobs(){
   historyEl.textContent="Loading...";
-  const snap=await db.collection("jobs").orderBy("created","desc").get();
+  const snap = await db.collection("jobs").orderBy("created","desc").get();
   historyEl.innerHTML="";
-  if(snap.empty){historyEl.textContent="No jobs.";return;}
+  if(snap.empty){ historyEl.textContent="No jobs."; return; }
 
   let totalSales=0,totalProfit=0,totalCommission=0;
   const years=new Set();
@@ -180,7 +209,9 @@ async function loadJobs(){
       <div>
         <b>${j.jobName}</b> (${j.profile})<br>
         ${year} ${quarter}<br>
-        Sale: $${j.sale.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+        Sale: $${j.sale.toFixed(2)} |
+        Profit: $${j.profit.toFixed(2)} |
+        Commission: $${j.commission.toFixed(2)}
       </div>
       <div>
         <button onclick="editJob('${doc.id}')">Edit</button>
@@ -189,18 +220,22 @@ async function loadJobs(){
     historyEl.appendChild(div);
   });
 
-  filterYear.innerHTML='<option value="">All Years</option>'+
+  filterYear.innerHTML =
+    '<option value="">All Years</option>'+
     [...years].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
 
   const t=document.createElement('div');
   t.style.fontWeight="bold";
-  t.innerHTML=`Totals — Sales: $${totalSales.toFixed(2)} | Profit: $${totalProfit.toFixed(2)} | Commission: $${totalCommission.toFixed(2)}`;
+  t.innerHTML=
+    `Totals — Sales: $${totalSales.toFixed(2)} |
+     Profit: $${totalProfit.toFixed(2)} |
+     Commission: $${totalCommission.toFixed(2)}`;
   historyEl.appendChild(t);
 }
 
-window.editJob=async(id)=>{
-  const d=await db.collection("jobs").doc(id).get();
-  const j=d.data();
+window.editJob = async(id)=>{
+  const d = await db.collection("jobs").doc(id).get();
+  const j = d.data();
   editingJobId=id;
   jobEl.value=j.jobName;
   saleEl.value=j.sale;
@@ -208,7 +243,7 @@ window.editJob=async(id)=>{
   profileSelect.value=j.profile;
 };
 
-window.deleteJob=async(id)=>{
+window.deleteJob = async(id)=>{
   if(confirm("Delete job?")){
     await db.collection("jobs").doc(id).delete();
     loadJobs();
