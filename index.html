@@ -9,13 +9,13 @@
 body { font-family: Arial, sans-serif; background:#f8f9fa; padding:20px; }
 h1 { text-align:center; }
 h1 span { color:blue; }
-.container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,.1); }
-label { margin-top:10px; display:block; }
+.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,.1); }
+label { display:block; margin-top:10px; }
 input, select, button { width:100%; padding:8px; margin-top:5px; }
 button { font-weight:bold; cursor:pointer; }
 .delete-btn { background:#dc3545; color:white; }
-#history .job { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; }
-.filter-container { display:flex; gap:10px; flex-wrap:wrap; }
+.job { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; }
+.actions button { width:auto; margin-left:5px; }
 </style>
 </head>
 
@@ -26,14 +26,13 @@ button { font-weight:bold; cursor:pointer; }
 <div class="container">
 
 <label>Profile</label>
-<select id="profileSelect">
-  <option value="David">David</option>
-  <option value="Joseph">Joseph</option>
-  <option value="ViewAll">View All</option>
+<select id="profile">
+  <option>David</option>
+  <option>Joseph</option>
 </select>
 
 <label>Job Name</label>
-<input id="jobName">
+<input id="job">
 
 <label>Sold Amount</label>
 <input id="sale" type="number">
@@ -41,35 +40,22 @@ button { font-weight:bold; cursor:pointer; }
 <label>Cost</label>
 <input id="cost" type="number">
 
-<button id="calcBtn">Calculate Commission</button>
-<div id="results"></div>
+<button id="calc">Calculate</button>
+<div id="result"></div>
 
-<button id="saveBtn">Save Job</button>
-<button id="recalcBtn" style="background:#ffc107;">Recalculate Existing Jobs (20% Rule)</button>
+<button id="save">Save Job</button>
+<button id="recalc" style="background:#ffc107;">Recalculate Existing Jobs</button>
 
-<h3>Job History</h3>
-
-<div class="filter-container">
-  <input id="filterJobName" placeholder="Filter Job Name">
-  <select id="filterProfile">
-    <option value="">All Profiles</option>
-    <option>David</option>
-    <option>Joseph</option>
-  </select>
-</div>
-
+<h3>Jobs</h3>
 <div id="history">Loading…</div>
 
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* =======================
-   FIREBASE INIT
-======================= */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
   authDomain: "g2-construction-commissi-35729.firebaseapp.com",
@@ -77,172 +63,111 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* =======================
-   ELEMENTS
-======================= */
-const profileSelect = document.getElementById("profileSelect");
-const jobEl = document.getElementById("jobName");
-const saleEl = document.getElementById("sale");
-const costEl = document.getElementById("cost");
-const resultsEl = document.getElementById("results");
+/* ELEMENTS */
 const historyEl = document.getElementById("history");
-const filterJobName = document.getElementById("filterJobName");
-const filterProfile = document.getElementById("filterProfile");
+let editId = null;
 
-let editingId = null;
-
-/* =======================
-   COMMISSION LOGIC
-   40% over 20%
-======================= */
-function calculate(sale, cost){
-  sale = Number(sale) || 0;
-  cost = Number(cost) || 0;
+/* COMMISSION — 40% OVER 20% */
+function calc(sale, cost){
+  sale = Number(sale)||0;
+  cost = Number(cost)||0;
   const profit = Math.max(0, sale - cost);
-  const eligible = Math.max(0, profit - (sale * 0.20));
-  return {
-    profit,
-    eligible,
-    commission: eligible * 0.40
-  };
+  const eligible = Math.max(0, profit - sale * 0.20);
+  return { profit, eligible, commission: eligible * 0.40 };
 }
 
-/* =======================
-   CALCULATE PREVIEW
-======================= */
-document.getElementById("calcBtn").onclick = () => {
-  const r = calculate(saleEl.value, costEl.value);
-  resultsEl.innerHTML =
+/* CALCULATE */
+document.getElementById("calc").onclick = () => {
+  const r = calc(sale.value, cost.value);
+  result.innerHTML =
     `Profit: $${r.profit.toFixed(2)}<br>
      Eligible: $${r.eligible.toFixed(2)}<br>
      Commission: $${r.commission.toFixed(2)}`;
 };
 
-/* =======================
-   SAVE JOB (SAFE)
-======================= */
-document.getElementById("saveBtn").onclick = async () => {
-  if(profileSelect.value === "ViewAll") return alert("Select a profile");
-  if(!jobEl.value.trim()) return alert("Enter job name");
-
-  const r = calculate(saleEl.value, costEl.value);
+/* SAVE */
+document.getElementById("save").onclick = async () => {
+  if(!job.value.trim()) return alert("Enter job name");
+  const r = calc(sale.value, cost.value);
 
   const data = {
-    profile: profileSelect.value,
-    jobName: jobEl.value.trim(),
-    sale: Number(saleEl.value) || 0,
-    cost: Number(costEl.value) || 0,
-    profit: r.profit,
-    eligible: r.eligible,
-    commission: r.commission,
+    profile: profile.value,
+    jobName: job.value.trim(),
+    sale: Number(sale.value)||0,
+    cost: Number(cost.value)||0,
+    ...r,
     created: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  if(editingId){
-    await db.collection("jobs").doc(editingId).set(data, { merge:true });
-  } else {
-    await db.collection("jobs").add(data);
-  }
+  editId
+    ? await db.collection("jobs").doc(editId).set(data, { merge:true })
+    : await db.collection("jobs").add(data);
 
-  editingId = null;
-  jobEl.value = saleEl.value = costEl.value = "";
-  resultsEl.innerHTML = "";
-  loadJobs();
+  editId = null;
+  job.value = sale.value = cost.value = "";
+  result.innerHTML = "";
 };
 
-/* =======================
-   LOAD JOBS (FIXED)
-======================= */
-async function loadJobs(){
-  historyEl.innerHTML = "Loading…";
-  const snap = await db.collection("jobs").get();
+/* REAL-TIME LOAD (THIS FIXES EVERYTHING) */
+db.collection("jobs").onSnapshot(snap => {
   historyEl.innerHTML = "";
-
-  if(snap.empty){
-    historyEl.textContent = "No jobs found.";
-    return;
-  }
+  if(snap.empty){ historyEl.textContent="No jobs"; return; }
 
   snap.forEach(doc => {
     const j = doc.data();
-    if(!j.jobName) return;
-
-    if(filterProfile.value && j.profile !== filterProfile.value) return;
-    if(filterJobName.value &&
-       !j.jobName.toLowerCase().includes(filterJobName.value.toLowerCase())) return;
-
     const div = document.createElement("div");
     div.className = "job";
+    div.dataset.id = doc.id;
     div.innerHTML = `
       <div>
         <b>${j.jobName}</b> (${j.profile})<br>
-        Sale: $${(j.sale||0).toFixed(2)} |
-        Profit: $${(j.profit||0).toFixed(2)} |
-        Commission: $${(j.commission||0).toFixed(2)}
+        Sale: $${j.sale.toFixed(2)} |
+        Profit: $${j.profit.toFixed(2)} |
+        Commission: $${j.commission.toFixed(2)}
       </div>
-      <div>
-        <button data-edit="${doc.id}">Edit</button>
-        <button class="delete-btn" data-delete="${doc.id}">Delete</button>
-      </div>
-    `;
+      <div class="actions">
+        <button data-edit>Edit</button>
+        <button class="delete-btn" data-delete>Delete</button>
+      </div>`;
     historyEl.appendChild(div);
   });
+});
 
-  /* Button bindings */
-  document.querySelectorAll("[data-edit]").forEach(btn=>{
-    btn.onclick = () => editJob(btn.dataset.edit);
-  });
-  document.querySelectorAll("[data-delete]").forEach(btn=>{
-    btn.onclick = () => deleteJob(btn.dataset.delete);
-  });
-}
+/* EVENT DELEGATION (EDIT / DELETE ALWAYS WORK) */
+historyEl.onclick = async e => {
+  const jobDiv = e.target.closest(".job");
+  if(!jobDiv) return;
+  const id = jobDiv.dataset.id;
 
-/* =======================
-   EDIT / DELETE
-======================= */
-async function editJob(id){
-  const doc = await db.collection("jobs").doc(id).get();
-  if(!doc.exists) return;
-  const j = doc.data();
-  editingId = id;
-  jobEl.value = j.jobName;
-  saleEl.value = j.sale;
-  costEl.value = j.cost;
-  profileSelect.value = j.profile;
-}
-
-async function deleteJob(id){
-  if(!confirm("Delete this job?")) return;
-  await db.collection("jobs").doc(id).delete();
-  loadJobs();
-}
-
-/* =======================
-   RE-CALCULATE ALL
-======================= */
-document.getElementById("recalcBtn").onclick = async () => {
-  if(!confirm("Recalculate ALL jobs to the 20% rule?")) return;
-  const snap = await db.collection("jobs").get();
-  const batch = db.batch();
-
-  snap.forEach(doc=>{
+  if(e.target.dataset.edit !== undefined){
+    const doc = await db.collection("jobs").doc(id).get();
     const j = doc.data();
-    const r = calculate(j.sale, j.cost);
-    batch.set(doc.ref, r, { merge:true });
-  });
+    editId = id;
+    job.value = j.jobName;
+    sale.value = j.sale;
+    cost.value = j.cost;
+    profile.value = j.profile;
+  }
 
-  await batch.commit();
-  alert("All jobs recalculated.");
-  loadJobs();
+  if(e.target.dataset.delete !== undefined){
+    if(confirm("Delete this job?")){
+      await db.collection("jobs").doc(id).delete();
+    }
+  }
 };
 
-/* Filters */
-filterJobName.oninput = loadJobs;
-filterProfile.onchange = loadJobs;
-profileSelect.onchange = loadJobs;
-
-/* Initial Load (AFTER Firebase ready) */
-loadJobs();
+/* RE-CALCULATE ALL */
+document.getElementById("recalc").onclick = async () => {
+  if(!confirm("Recalculate ALL jobs to 20% rule?")) return;
+  const snap = await db.collection("jobs").get();
+  const batch = db.batch();
+  snap.forEach(doc=>{
+    const j = doc.data();
+    batch.set(doc.ref, calc(j.sale, j.cost), { merge:true });
+  });
+  await batch.commit();
+  alert("Recalculation complete");
+};
 </script>
 
 </body>
