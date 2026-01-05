@@ -12,9 +12,9 @@ h1 span { color:blue; }
 .container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,.1); }
 label { margin-top:10px; display:block; }
 input, select, button { width:100%; padding:8px; margin-top:5px; }
-button { cursor:pointer; font-weight:bold; }
+button { font-weight:bold; cursor:pointer; }
 .delete-btn { background:#dc3545; color:white; }
-#history div { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; gap:10px; }
+#history .job { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; }
 .filter-container { display:flex; gap:10px; flex-wrap:wrap; }
 </style>
 </head>
@@ -45,7 +45,7 @@ button { cursor:pointer; font-weight:bold; }
 <div id="results"></div>
 
 <button id="saveBtn">Save Job</button>
-<button id="recalcBtn" style="background:#ffc107">Recalculate Existing Jobs (20% Rule)</button>
+<button id="recalcBtn" style="background:#ffc107;">Recalculate Existing Jobs (20% Rule)</button>
 
 <h3>Job History</h3>
 
@@ -58,7 +58,7 @@ button { cursor:pointer; font-weight:bold; }
   </select>
 </div>
 
-<div id="history">Loading...</div>
+<div id="history">Loading…</div>
 
 </div>
 
@@ -67,7 +67,9 @@ button { cursor:pointer; font-weight:bold; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* Firebase */
+/* =======================
+   FIREBASE INIT
+======================= */
 firebase.initializeApp({
   apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
   authDomain: "g2-construction-commissi-35729.firebaseapp.com",
@@ -75,7 +77,9 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* Elements */
+/* =======================
+   ELEMENTS
+======================= */
 const profileSelect = document.getElementById("profileSelect");
 const jobEl = document.getElementById("jobName");
 const saleEl = document.getElementById("sale");
@@ -87,8 +91,13 @@ const filterProfile = document.getElementById("filterProfile");
 
 let editingId = null;
 
-/* Commission Math — 40% over 20% */
-function calc(sale, cost){
+/* =======================
+   COMMISSION LOGIC
+   40% over 20%
+======================= */
+function calculate(sale, cost){
+  sale = Number(sale) || 0;
+  cost = Number(cost) || 0;
   const profit = Math.max(0, sale - cost);
   const eligible = Math.max(0, profit - (sale * 0.20));
   return {
@@ -98,110 +107,143 @@ function calc(sale, cost){
   };
 }
 
-/* Preview */
+/* =======================
+   CALCULATE PREVIEW
+======================= */
 document.getElementById("calcBtn").onclick = () => {
-  const r = calc(+saleEl.value||0, +costEl.value||0);
+  const r = calculate(saleEl.value, costEl.value);
   resultsEl.innerHTML =
     `Profit: $${r.profit.toFixed(2)}<br>
      Eligible: $${r.eligible.toFixed(2)}<br>
      Commission: $${r.commission.toFixed(2)}`;
 };
 
-/* Save */
+/* =======================
+   SAVE JOB (SAFE)
+======================= */
 document.getElementById("saveBtn").onclick = async () => {
-  if(profileSelect.value==="ViewAll") return alert("Select a profile");
+  if(profileSelect.value === "ViewAll") return alert("Select a profile");
   if(!jobEl.value.trim()) return alert("Enter job name");
 
-  const r = calc(+saleEl.value||0, +costEl.value||0);
+  const r = calculate(saleEl.value, costEl.value);
 
   const data = {
     profile: profileSelect.value,
-    jobName: jobEl.value,
-    sale: +saleEl.value||0,
-    cost: +costEl.value||0,
-    ...r,
+    jobName: jobEl.value.trim(),
+    sale: Number(saleEl.value) || 0,
+    cost: Number(costEl.value) || 0,
+    profit: r.profit,
+    eligible: r.eligible,
+    commission: r.commission,
     created: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  editingId
-    ? await db.collection("jobs").doc(editingId).update(data)
-    : await db.collection("jobs").add(data);
+  if(editingId){
+    await db.collection("jobs").doc(editingId).set(data, { merge:true });
+  } else {
+    await db.collection("jobs").add(data);
+  }
 
-  editingId=null;
-  jobEl.value=saleEl.value=costEl.value="";
-  resultsEl.innerHTML="";
+  editingId = null;
+  jobEl.value = saleEl.value = costEl.value = "";
+  resultsEl.innerHTML = "";
   loadJobs();
 };
 
-/* Load Jobs */
+/* =======================
+   LOAD JOBS (FIXED)
+======================= */
 async function loadJobs(){
-  historyEl.innerHTML="";
+  historyEl.innerHTML = "Loading…";
   const snap = await db.collection("jobs").get();
-  if(snap.empty){ historyEl.textContent="No jobs"; return; }
+  historyEl.innerHTML = "";
 
-  snap.forEach(doc=>{
+  if(snap.empty){
+    historyEl.textContent = "No jobs found.";
+    return;
+  }
+
+  snap.forEach(doc => {
     const j = doc.data();
+    if(!j.jobName) return;
 
-    if(filterProfile.value && j.profile!==filterProfile.value) return;
-    if(filterJobName.value && !j.jobName.toLowerCase().includes(filterJobName.value.toLowerCase())) return;
+    if(filterProfile.value && j.profile !== filterProfile.value) return;
+    if(filterJobName.value &&
+       !j.jobName.toLowerCase().includes(filterJobName.value.toLowerCase())) return;
 
     const div = document.createElement("div");
+    div.className = "job";
     div.innerHTML = `
       <div>
         <b>${j.jobName}</b> (${j.profile})<br>
-        Sale: $${j.sale.toFixed(2)} |
-        Profit: $${j.profit.toFixed(2)} |
-        Commission: $${j.commission.toFixed(2)}
+        Sale: $${(j.sale||0).toFixed(2)} |
+        Profit: $${(j.profit||0).toFixed(2)} |
+        Commission: $${(j.commission||0).toFixed(2)}
       </div>
       <div>
-        <button onclick="editJob('${doc.id}')">Edit</button>
-        <button class="delete-btn" onclick="deleteJob('${doc.id}')">Delete</button>
-      </div>`;
+        <button data-edit="${doc.id}">Edit</button>
+        <button class="delete-btn" data-delete="${doc.id}">Delete</button>
+      </div>
+    `;
     historyEl.appendChild(div);
+  });
+
+  /* Button bindings */
+  document.querySelectorAll("[data-edit]").forEach(btn=>{
+    btn.onclick = () => editJob(btn.dataset.edit);
+  });
+  document.querySelectorAll("[data-delete]").forEach(btn=>{
+    btn.onclick = () => deleteJob(btn.dataset.delete);
   });
 }
 
-/* Edit */
-window.editJob = async id => {
-  const d = await db.collection("jobs").doc(id).get();
-  const j = d.data();
-  editingId=id;
-  jobEl.value=j.jobName;
-  saleEl.value=j.sale;
-  costEl.value=j.cost;
-  profileSelect.value=j.profile;
-};
+/* =======================
+   EDIT / DELETE
+======================= */
+async function editJob(id){
+  const doc = await db.collection("jobs").doc(id).get();
+  if(!doc.exists) return;
+  const j = doc.data();
+  editingId = id;
+  jobEl.value = j.jobName;
+  saleEl.value = j.sale;
+  costEl.value = j.cost;
+  profileSelect.value = j.profile;
+}
 
-/* Delete */
-window.deleteJob = async id => {
-  if(confirm("Delete this job?")){
-    await db.collection("jobs").doc(id).delete();
-    loadJobs();
-  }
-};
+async function deleteJob(id){
+  if(!confirm("Delete this job?")) return;
+  await db.collection("jobs").doc(id).delete();
+  loadJobs();
+}
 
-/* Recalculate Existing */
+/* =======================
+   RE-CALCULATE ALL
+======================= */
 document.getElementById("recalcBtn").onclick = async () => {
-  if(!confirm("Recalculate ALL jobs to 20% rule?")) return;
+  if(!confirm("Recalculate ALL jobs to the 20% rule?")) return;
   const snap = await db.collection("jobs").get();
   const batch = db.batch();
+
   snap.forEach(doc=>{
     const j = doc.data();
-    const r = calc(j.sale||0, j.cost||0);
-    batch.update(doc.ref, r);
+    const r = calculate(j.sale, j.cost);
+    batch.set(doc.ref, r, { merge:true });
   });
+
   await batch.commit();
-  alert("Recalculation complete");
+  alert("All jobs recalculated.");
   loadJobs();
 };
 
+/* Filters */
 filterJobName.oninput = loadJobs;
 filterProfile.onchange = loadJobs;
 profileSelect.onchange = loadJobs;
 
+/* Initial Load (AFTER Firebase ready) */
 loadJobs();
 </script>
 
 </body>
 </html>
-
