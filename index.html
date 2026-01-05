@@ -59,7 +59,7 @@ button:active { transform: scale(0.97); }
   border-radius:8px;
   box-shadow:0 2px 6px rgba(0,0,0,0.08);
   padding:15px;
-  margin-bottom:12px;
+  margin-bottom:15px; /* increased spacing */
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -177,7 +177,6 @@ const filterQuarter = document.getElementById('filterQuarter');
 
 let editingJobId = null;
 
-// Helper to get year & quarter
 function getYearQuarter(ts){
   const d = ts.toDate();
   const y = d.getFullYear();
@@ -189,7 +188,6 @@ function getYearQuarter(ts){
   return {year:y, quarter:q};
 }
 
-// Calculate commission
 document.getElementById('calcBtn').addEventListener('click', ()=> {
     const sale = parseFloat(saleEl.value)||0;
     const cost = parseFloat(costEl.value)||0;
@@ -200,7 +198,6 @@ document.getElementById('calcBtn').addEventListener('click', ()=> {
     resultsEl.innerHTML = `Profit: $${profit.toFixed(2)}<br>Eligible: $${eligible.toFixed(2)}<br>Commission: $${commission.toFixed(2)}`;
 });
 
-// Save job
 document.getElementById('saveBtn').addEventListener('click', async ()=> {
     const profile = profileSelect.value==="ViewAll"?null:profileSelect.value;
     if(!profile) return alert("Select David or Joseph to save a job.");
@@ -227,11 +224,10 @@ document.getElementById('saveBtn').addEventListener('click', async ()=> {
     } catch(err){ console.error(err); alert("Error saving job."); }
 });
 
-// Load jobs
 async function loadJobs(){
     historyEl.innerHTML="Loading...";
     try{
-        let snapshot = await db.collection("jobs").orderBy("created","desc").get();
+        const snapshot = await db.collection("jobs").orderBy("created","desc").get();
         historyEl.innerHTML='';
         if(snapshot.empty){ historyEl.textContent="No jobs yet."; return; }
 
@@ -250,7 +246,6 @@ async function loadJobs(){
             const {year, quarter} = getYearQuarter(j.created);
             years.add(year);
 
-            // Filters
             if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
             if(profileFilterVal && j.profile!==profileFilterVal) return;
             if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
@@ -293,10 +288,10 @@ async function loadJobs(){
         // Populate year filter dynamically
         filterYear.innerHTML = '<option value="">All Years</option>' + [...years].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
 
-        // Totals
+        // Totals at bottom
         const totalsDiv = document.createElement('div');
         totalsDiv.style.fontWeight='bold';
-        totalsDiv.style.marginTop='10px';
+        totalsDiv.style.marginTop='20px';
         const profitAfterCommission = totalProfit - totalCommission;
         totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${profitAfterCommission.toFixed(2)}`;
         historyEl.appendChild(totalsDiv);
