@@ -6,16 +6,77 @@
 <title>G2 Construction Commission Tracker</title>
 
 <style>
-body { font-family: Arial, sans-serif; background:#f8f9fa; padding:20px; }
-h1 { text-align:center; }
-h1 span { color:blue; }
-.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,.1); }
-label { display:block; margin-top:10px; }
-input, select, button { width:100%; padding:8px; margin-top:5px; }
-button { font-weight:bold; cursor:pointer; }
-.delete-btn { background:#dc3545; color:white; }
-.job { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; }
-.actions button { width:auto; margin-left:5px; }
+body {
+  font-family: Arial, sans-serif;
+  background:#f8f9fa;
+  padding:20px;
+}
+h1 {
+  text-align:center;
+  font-size:36px;
+  margin-bottom:25px;
+}
+h1 span { color:#007bff; }
+
+.container {
+  max-width:900px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
+}
+
+label { display:block; margin-top:12px; font-weight:bold; }
+
+input, select, button {
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  border-radius:5px;
+  border:1px solid #ccc;
+}
+
+button {
+  background:#007bff;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  border:none;
+}
+button:hover { background:#0056b3; }
+
+.delete-btn {
+  background:#dc3545;
+}
+.delete-btn:hover {
+  background:#b52a37;
+}
+
+.job {
+  border-bottom:1px solid #eee;
+  padding:12px 0;
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.actions button {
+  width:auto;
+  margin-left:5px;
+}
+
+.filter-container {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+
+.filter-container input,
+.filter-container select {
+  flex:1;
+}
 </style>
 </head>
 
@@ -40,13 +101,32 @@ button { font-weight:bold; cursor:pointer; }
 <label>Cost</label>
 <input id="cost" type="number">
 
-<button id="calc">Calculate</button>
-<div id="result"></div>
+<button id="calc">Calculate Commission</button>
+<div id="result" style="margin-top:10px;font-weight:bold;"></div>
 
 <button id="save">Save Job</button>
-<button id="recalc" style="background:#ffc107;">Recalculate Existing Jobs</button>
 
-<h3>Jobs</h3>
+<h3 style="margin-top:30px;">Job History</h3>
+
+<div class="filter-container">
+  <input id="filterJob" placeholder="Filter Job Name">
+  <select id="filterProfile">
+    <option value="">All Profiles</option>
+    <option>David</option>
+    <option>Joseph</option>
+  </select>
+  <select id="filterYear">
+    <option value="">All Years</option>
+  </select>
+  <select id="filterQuarter">
+    <option value="">All Quarters</option>
+    <option value="Q1">Q1 (Jan–Mar)</option>
+    <option value="Q2">Q2 (Apr–Jun)</option>
+    <option value="Q3">Q3 (Jul–Sep)</option>
+    <option value="Q4">Q4 (Oct–Dec)</option>
+  </select>
+</div>
+
 <div id="history">Loading…</div>
 
 </div>
@@ -65,7 +145,24 @@ const db = firebase.firestore();
 
 /* ELEMENTS */
 const historyEl = document.getElementById("history");
+const filterJob = document.getElementById("filterJob");
+const filterProfile = document.getElementById("filterProfile");
+const filterYear = document.getElementById("filterYear");
+const filterQuarter = document.getElementById("filterQuarter");
+
 let editId = null;
+
+/* HELPERS */
+function getYearQuarter(ts){
+  const d = ts.toDate();
+  const year = d.getFullYear();
+  const m = d.getMonth()+1;
+  let q="Q1";
+  if(m>=4&&m<=6) q="Q2";
+  else if(m>=7&&m<=9) q="Q3";
+  else if(m>=10) q="Q4";
+  return {year, quarter:q};
+}
 
 /* COMMISSION — 40% OVER 20% */
 function calc(sale, cost){
@@ -76,7 +173,11 @@ function calc(sale, cost){
   return { profit, eligible, commission: eligible * 0.40 };
 }
 
-/* CALCULATE */
+/* CALCULATE PREVIEW */
+calc.onclick = () => {
+  const r = calcFn();
+};
+
 document.getElementById("calc").onclick = () => {
   const r = calc(sale.value, cost.value);
   result.innerHTML =
@@ -88,8 +189,8 @@ document.getElementById("calc").onclick = () => {
 /* SAVE */
 document.getElementById("save").onclick = async () => {
   if(!job.value.trim()) return alert("Enter job name");
-  const r = calc(sale.value, cost.value);
 
+  const r = calc(sale.value, cost.value);
   const data = {
     profile: profile.value,
     jobName: job.value.trim(),
@@ -100,27 +201,55 @@ document.getElementById("save").onclick = async () => {
   };
 
   editId
-    ? await db.collection("jobs").doc(editId).set(data, { merge:true })
+    ? await db.collection("jobs").doc(editId).set(data,{merge:true})
     : await db.collection("jobs").add(data);
 
-  editId = null;
-  job.value = sale.value = cost.value = "";
-  result.innerHTML = "";
+  editId=null;
+  job.value=sale.value=cost.value="";
+  result.innerHTML="";
 };
 
-/* REAL-TIME LOAD (THIS FIXES EVERYTHING) */
-db.collection("jobs").onSnapshot(snap => {
-  historyEl.innerHTML = "";
-  if(snap.empty){ historyEl.textContent="No jobs"; return; }
+/* REAL-TIME LOAD */
+let allJobs = [];
 
-  snap.forEach(doc => {
+db.collection("jobs").onSnapshot(snap=>{
+  allJobs = [];
+  const years = new Set();
+
+  snap.forEach(doc=>{
     const j = doc.data();
-    const div = document.createElement("div");
-    div.className = "job";
-    div.dataset.id = doc.id;
-    div.innerHTML = `
+    if(!j.created) return;
+    const yq = getYearQuarter(j.created);
+    years.add(yq.year);
+    allJobs.push({id:doc.id,...j,...yq});
+  });
+
+  filterYear.innerHTML =
+    '<option value="">All Years</option>' +
+    [...years].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
+
+  renderJobs();
+});
+
+/* RENDER */
+function renderJobs(){
+  historyEl.innerHTML="";
+  if(!allJobs.length){ historyEl.textContent="No jobs"; return; }
+
+  allJobs.forEach(j=>{
+    if(filterProfile.value && j.profile!==filterProfile.value) return;
+    if(filterYear.value && j.year.toString()!==filterYear.value) return;
+    if(filterQuarter.value && j.quarter!==filterQuarter.value) return;
+    if(filterJob.value &&
+       !j.jobName.toLowerCase().includes(filterJob.value.toLowerCase())) return;
+
+    const div=document.createElement("div");
+    div.className="job";
+    div.dataset.id=j.id;
+    div.innerHTML=`
       <div>
         <b>${j.jobName}</b> (${j.profile})<br>
+        ${j.year} ${j.quarter}<br>
         Sale: $${j.sale.toFixed(2)} |
         Profit: $${j.profit.toFixed(2)} |
         Commission: $${j.commission.toFixed(2)}
@@ -131,43 +260,36 @@ db.collection("jobs").onSnapshot(snap => {
       </div>`;
     historyEl.appendChild(div);
   });
-});
+}
 
-/* EVENT DELEGATION (EDIT / DELETE ALWAYS WORK) */
+/* EDIT / DELETE (EVENT DELEGATION) */
 historyEl.onclick = async e => {
   const jobDiv = e.target.closest(".job");
   if(!jobDiv) return;
   const id = jobDiv.dataset.id;
 
-  if(e.target.dataset.edit !== undefined){
-    const doc = await db.collection("jobs").doc(id).get();
-    const j = doc.data();
-    editId = id;
-    job.value = j.jobName;
-    sale.value = j.sale;
-    cost.value = j.cost;
-    profile.value = j.profile;
+  if(e.target.dataset.edit!==undefined){
+    const d = await db.collection("jobs").doc(id).get();
+    const j = d.data();
+    editId=id;
+    job.value=j.jobName;
+    sale.value=j.sale;
+    cost.value=j.cost;
+    profile.value=j.profile;
   }
 
-  if(e.target.dataset.delete !== undefined){
+  if(e.target.dataset.delete!==undefined){
     if(confirm("Delete this job?")){
       await db.collection("jobs").doc(id).delete();
     }
   }
 };
 
-/* RE-CALCULATE ALL */
-document.getElementById("recalc").onclick = async () => {
-  if(!confirm("Recalculate ALL jobs to 20% rule?")) return;
-  const snap = await db.collection("jobs").get();
-  const batch = db.batch();
-  snap.forEach(doc=>{
-    const j = doc.data();
-    batch.set(doc.ref, calc(j.sale, j.cost), { merge:true });
-  });
-  await batch.commit();
-  alert("Recalculation complete");
-};
+/* FILTERS */
+filterJob.oninput = renderJobs;
+filterProfile.onchange = renderJobs;
+filterYear.onchange = renderJobs;
+filterQuarter.onchange = renderJobs;
 </script>
 
 </body>
