@@ -6,18 +6,16 @@
 <title>G2 Construction Commission Tracker</title>
 
 <style>
-body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
-h1 { text-align:center; font-size:24px; margin-bottom:20px; }
+body { font-family: Arial, sans-serif; background:#f8f9fa; padding:20px; }
+h1 { text-align:center; }
 h1 span { color:blue; }
-.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,0.1); }
-label { display:block; margin-top:10px; }
-input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; }
-button { background:#007bff; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:10px; }
-button:hover { background:#0056b3; }
-#history div { border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between; gap:10px; }
-.delete-btn { background:#dc3545; }
-.filter-container { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-.filter-container input, .filter-container select { flex:1; }
+.container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,.1); }
+label { margin-top:10px; display:block; }
+input, select, button { width:100%; padding:8px; margin-top:5px; }
+button { cursor:pointer; font-weight:bold; }
+.delete-btn { background:#dc3545; color:white; }
+#history div { border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; gap:10px; }
+.filter-container { display:flex; gap:10px; flex-wrap:wrap; }
 </style>
 </head>
 
@@ -27,44 +25,36 @@ button:hover { background:#0056b3; }
 
 <div class="container">
 
-<label>Profile:</label>
+<label>Profile</label>
 <select id="profileSelect">
   <option value="David">David</option>
   <option value="Joseph">Joseph</option>
   <option value="ViewAll">View All</option>
 </select>
 
-<label>Job Name:</label>
-<input type="text" id="jobName">
+<label>Job Name</label>
+<input id="jobName">
 
-<label>Sold Amount:</label>
-<input type="number" id="sale">
+<label>Sold Amount</label>
+<input id="sale" type="number">
 
-<label>Cost:</label>
-<input type="number" id="cost">
+<label>Cost</label>
+<input id="cost" type="number">
 
 <button id="calcBtn">Calculate Commission</button>
-<div id="results" style="font-weight:bold;margin-top:10px;"></div>
+<div id="results"></div>
 
 <button id="saveBtn">Save Job</button>
-<button id="exportBtn">Export CSV</button>
+<button id="recalcBtn" style="background:#ffc107">Recalculate Existing Jobs (20% Rule)</button>
 
 <h3>Job History</h3>
 
 <div class="filter-container">
-  <input type="text" id="filterJobName" placeholder="Filter Job Name">
+  <input id="filterJobName" placeholder="Filter Job Name">
   <select id="filterProfile">
     <option value="">All Profiles</option>
-    <option value="David">David</option>
-    <option value="Joseph">Joseph</option>
-  </select>
-  <select id="filterYear"></select>
-  <select id="filterQuarter">
-    <option value="">All Quarters</option>
-    <option value="Q1">Q1 (Jan–Mar)</option>
-    <option value="Q2">Q2 (Apr–Jun)</option>
-    <option value="Q3">Q3 (Jul–Sep)</option>
-    <option value="Q4">Q4 (Oct–Dec)</option>
+    <option>David</option>
+    <option>Joseph</option>
   </select>
 </div>
 
@@ -77,138 +67,88 @@ button:hover { background:#0056b3; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
+/* Firebase */
+firebase.initializeApp({
   apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
   authDomain: "g2-construction-commissi-35729.firebaseapp.com",
-  projectId: "g2-construction-commissi-35729",
-  storageBucket: "g2-construction-commissi-35729.firebasestorage.app",
-  messagingSenderId: "347759839953",
-  appId: "1:347759839953:web:b2ec2e14aee7c47e8cd3f0"
-};
-
-firebase.initializeApp(firebaseConfig);
+  projectId: "g2-construction-commissi-35729"
+});
 const db = firebase.firestore();
 
 /* Elements */
-const profileSelect = document.getElementById('profileSelect');
-const jobEl = document.getElementById('jobName');
-const saleEl = document.getElementById('sale');
-const costEl = document.getElementById('cost');
-const resultsEl = document.getElementById('results');
-const historyEl = document.getElementById('history');
-const filterJobName = document.getElementById('filterJobName');
-const filterProfile = document.getElementById('filterProfile');
-const filterYear = document.getElementById('filterYear');
-const filterQuarter = document.getElementById('filterQuarter');
+const profileSelect = document.getElementById("profileSelect");
+const jobEl = document.getElementById("jobName");
+const saleEl = document.getElementById("sale");
+const costEl = document.getElementById("cost");
+const resultsEl = document.getElementById("results");
+const historyEl = document.getElementById("history");
+const filterJobName = document.getElementById("filterJobName");
+const filterProfile = document.getElementById("filterProfile");
 
-let editingJobId = null;
+let editingId = null;
 
-/* Helpers */
-function getYearQuarter(ts){
-  const d = ts.toDate();
-  const year = d.getFullYear();
-  const month = d.getMonth()+1;
-  let quarter="Q1";
-  if(month>=4&&month<=6) quarter="Q2";
-  else if(month>=7&&month<=9) quarter="Q3";
-  else if(month>=10) quarter="Q4";
-  return {year,quarter};
-}
-
-/* Commission calc — 20% RULE */
-function calculateCommission(sale, cost){
+/* Commission Math — 40% over 20% */
+function calc(sale, cost){
   const profit = Math.max(0, sale - cost);
   const eligible = Math.max(0, profit - (sale * 0.20));
-  const commission = eligible * 0.40;
-  return { profit, eligible, commission };
+  return {
+    profit,
+    eligible,
+    commission: eligible * 0.40
+  };
 }
 
-/* Preview calculation */
-document.getElementById('calcBtn').onclick = () => {
-  const sale = +saleEl.value || 0;
-  const cost = +costEl.value || 0;
-  const { profit, eligible, commission } = calculateCommission(sale, cost);
+/* Preview */
+document.getElementById("calcBtn").onclick = () => {
+  const r = calc(+saleEl.value||0, +costEl.value||0);
   resultsEl.innerHTML =
-    `Profit: $${profit.toFixed(2)}<br>
-     Eligible: $${eligible.toFixed(2)}<br>
-     Commission: $${commission.toFixed(2)}`;
+    `Profit: $${r.profit.toFixed(2)}<br>
+     Eligible: $${r.eligible.toFixed(2)}<br>
+     Commission: $${r.commission.toFixed(2)}`;
 };
 
-/* Save Job */
-document.getElementById('saveBtn').onclick = async () => {
-  const profile = profileSelect.value;
-  if(profile==="ViewAll") return alert("Select a profile.");
-  const jobName = jobEl.value.trim();
-  if(!jobName) return alert("Enter job name.");
+/* Save */
+document.getElementById("saveBtn").onclick = async () => {
+  if(profileSelect.value==="ViewAll") return alert("Select a profile");
+  if(!jobEl.value.trim()) return alert("Enter job name");
 
-  const sale = +saleEl.value || 0;
-  const cost = +costEl.value || 0;
-  const { profit, eligible, commission } = calculateCommission(sale, cost);
+  const r = calc(+saleEl.value||0, +costEl.value||0);
 
   const data = {
-    profile, jobName, sale, cost, profit, eligible, commission,
+    profile: profileSelect.value,
+    jobName: jobEl.value,
+    sale: +saleEl.value||0,
+    cost: +costEl.value||0,
+    ...r,
     created: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  editingJobId
-    ? await db.collection("jobs").doc(editingJobId).set(data)
+  editingId
+    ? await db.collection("jobs").doc(editingId).update(data)
     : await db.collection("jobs").add(data);
 
-  editingJobId=null;
+  editingId=null;
   jobEl.value=saleEl.value=costEl.value="";
-  resultsEl.textContent="";
-  loadJobs();
-};
-
-/* 🔁 RE-CALCULATE EXISTING JOBS */
-document.getElementById('recalcBtn').onclick = async () => {
-  if(!confirm("Recalculate ALL jobs using the new 20% rule?")) return;
-
-  const snap = await db.collection("jobs").get();
-  const batch = db.batch();
-
-  snap.forEach(doc=>{
-    const j = doc.data();
-    const { profit, eligible, commission } = calculateCommission(j.sale, j.cost);
-    batch.update(doc.ref, { profit, eligible, commission });
-  });
-
-  await batch.commit();
-  alert("All jobs recalculated using 20% rule.");
+  resultsEl.innerHTML="";
   loadJobs();
 };
 
 /* Load Jobs */
 async function loadJobs(){
-  historyEl.textContent="Loading...";
-  const snap = await db.collection("jobs").orderBy("created","desc").get();
   historyEl.innerHTML="";
-  if(snap.empty){ historyEl.textContent="No jobs."; return; }
-
-  let totalSales=0,totalProfit=0,totalCommission=0;
-  const years=new Set();
+  const snap = await db.collection("jobs").get();
+  if(snap.empty){ historyEl.textContent="No jobs"; return; }
 
   snap.forEach(doc=>{
-    const j=doc.data();
-    if(!j.created) return;
-    const {year,quarter}=getYearQuarter(j.created);
-    years.add(year);
+    const j = doc.data();
 
-    if(profileSelect.value!=="ViewAll"&&j.profile!==profileSelect.value) return;
-    if(filterProfile.value&&j.profile!==filterProfile.value) return;
-    if(filterYear.value&&year.toString()!==filterYear.value) return;
-    if(filterQuarter.value&&quarter!==filterQuarter.value) return;
-    if(filterJobName.value&&!j.jobName.toLowerCase().includes(filterJobName.value.toLowerCase())) return;
+    if(filterProfile.value && j.profile!==filterProfile.value) return;
+    if(filterJobName.value && !j.jobName.toLowerCase().includes(filterJobName.value.toLowerCase())) return;
 
-    totalSales+=j.sale;
-    totalProfit+=j.profit;
-    totalCommission+=j.commission;
-
-    const div=document.createElement('div');
-    div.innerHTML=`
+    const div = document.createElement("div");
+    div.innerHTML = `
       <div>
         <b>${j.jobName}</b> (${j.profile})<br>
-        ${year} ${quarter}<br>
         Sale: $${j.sale.toFixed(2)} |
         Profit: $${j.profit.toFixed(2)} |
         Commission: $${j.commission.toFixed(2)}
@@ -219,45 +159,49 @@ async function loadJobs(){
       </div>`;
     historyEl.appendChild(div);
   });
-
-  filterYear.innerHTML =
-    '<option value="">All Years</option>'+
-    [...years].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
-
-  const t=document.createElement('div');
-  t.style.fontWeight="bold";
-  t.innerHTML=
-    `Totals — Sales: $${totalSales.toFixed(2)} |
-     Profit: $${totalProfit.toFixed(2)} |
-     Commission: $${totalCommission.toFixed(2)}`;
-  historyEl.appendChild(t);
 }
 
-window.editJob = async(id)=>{
+/* Edit */
+window.editJob = async id => {
   const d = await db.collection("jobs").doc(id).get();
   const j = d.data();
-  editingJobId=id;
+  editingId=id;
   jobEl.value=j.jobName;
   saleEl.value=j.sale;
   costEl.value=j.cost;
   profileSelect.value=j.profile;
 };
 
-window.deleteJob = async(id)=>{
-  if(confirm("Delete job?")){
+/* Delete */
+window.deleteJob = async id => {
+  if(confirm("Delete this job?")){
     await db.collection("jobs").doc(id).delete();
     loadJobs();
   }
 };
 
-filterJobName.oninput=loadJobs;
-filterProfile.onchange=loadJobs;
-filterYear.onchange=loadJobs;
-filterQuarter.onchange=loadJobs;
-profileSelect.onchange=loadJobs;
+/* Recalculate Existing */
+document.getElementById("recalcBtn").onclick = async () => {
+  if(!confirm("Recalculate ALL jobs to 20% rule?")) return;
+  const snap = await db.collection("jobs").get();
+  const batch = db.batch();
+  snap.forEach(doc=>{
+    const j = doc.data();
+    const r = calc(j.sale||0, j.cost||0);
+    batch.update(doc.ref, r);
+  });
+  await batch.commit();
+  alert("Recalculation complete");
+  loadJobs();
+};
+
+filterJobName.oninput = loadJobs;
+filterProfile.onchange = loadJobs;
+profileSelect.onchange = loadJobs;
 
 loadJobs();
 </script>
 
 </body>
 </html>
+
