@@ -4,293 +4,230 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G2 Construction Commission Tracker</title>
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f8f9fa;
-  padding:20px;
-}
-h1 {
-  text-align:center;
-  font-size:36px;
-  margin-bottom:25px;
-}
-h1 span { color:#007bff; }
-
-.container {
-  max-width:900px;
-  margin:auto;
-  background:white;
-  padding:25px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,.1);
-}
-
-label { display:block; margin-top:12px; font-weight:bold; }
-
-input, select, button {
-  width:100%;
-  padding:10px;
-  margin-top:6px;
-  border-radius:5px;
-  border:1px solid #ccc;
-}
-
-button {
-  background:#007bff;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  border:none;
-}
+body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
+h1 { text-align:center; font-size:24px; margin-bottom:20px; }
+h1 span { color:blue; }
+.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,0.1); }
+label { display:block; margin-top:10px; }
+input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; }
+button { background:#007bff; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:10px; }
 button:hover { background:#0056b3; }
-
-.delete-btn {
-  background:#dc3545;
-}
-.delete-btn:hover {
-  background:#b52a37;
-}
-
-.job {
-  border-bottom:1px solid #eee;
-  padding:12px 0;
-  display:flex;
-  justify-content:space-between;
-  gap:15px;
-}
-
-.actions button {
-  width:auto;
-  margin-left:5px;
-}
-
-.filter-container {
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:10px;
-}
-
-.filter-container input,
-.filter-container select {
-  flex:1;
-}
+#history div { border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between; align-items:center; }
+.edit-btn, .delete-btn, .export-btn { margin-left:5px; }
+.delete-btn { background:#dc3545; }
+.edit-btn:hover { background:#5a6268; }
+.delete-btn:hover { background:#c82333; }
+.filter-container { display:flex; gap:10px; flex-wrap: wrap; margin-top:10px; }
+.filter-container input, .filter-container select { flex:1; }
 </style>
 </head>
-
 <body>
 
 <h1>G<span>2</span> Construction Commission Tracker</h1>
-
 <div class="container">
-
-<label>Profile</label>
-<select id="profile">
-  <option>David</option>
-  <option>Joseph</option>
-</select>
-
-<label>Job Name</label>
-<input id="job">
-
-<label>Sold Amount</label>
-<input id="sale" type="number">
-
-<label>Cost</label>
-<input id="cost" type="number">
-
-<button id="calc">Calculate Commission</button>
-<div id="result" style="margin-top:10px;font-weight:bold;"></div>
-
-<button id="save">Save Job</button>
-
-<h3 style="margin-top:30px;">Job History</h3>
-
-<div class="filter-container">
-  <input id="filterJob" placeholder="Filter Job Name">
-  <select id="filterProfile">
-    <option value="">All Profiles</option>
-    <option>David</option>
-    <option>Joseph</option>
+  <label>Profile:</label>
+  <select id="profileSelect">
+    <option value="David">David</option>
+    <option value="Joseph">Joseph</option>
+    <option value="ViewAll">View All</option>
   </select>
-  <select id="filterYear">
-    <option value="">All Years</option>
-  </select>
-  <select id="filterQuarter">
-    <option value="">All Quarters</option>
-    <option value="Q1">Q1 (Jan–Mar)</option>
-    <option value="Q2">Q2 (Apr–Jun)</option>
-    <option value="Q3">Q3 (Jul–Sep)</option>
-    <option value="Q4">Q4 (Oct–Dec)</option>
-  </select>
+
+  <label>Job Name:</label>
+  <input type="text" id="jobName" placeholder="Enter job name">
+
+  <label>Sold Amount:</label>
+  <input type="number" id="sale" placeholder="Enter sale amount">
+
+  <label>Cost:</label>
+  <input type="number" id="cost" placeholder="Enter cost amount">
+
+  <button id="calcBtn">Calculate Commission</button>
+  <div id="results" style="margin-top:10px;font-weight:bold;"></div>
+
+  <button id="saveBtn">Save Job</button>
+  <button id="exportBtn">Export CSV</button>
+
+  <h3>Job History (Filtered)</h3>
+  <div class="filter-container">
+    <input type="text" id="filterJobName" placeholder="Filter by Job Name">
+    <select id="filterProfile">
+      <option value="">All Profiles</option>
+      <option value="David">David</option>
+      <option value="Joseph">Joseph</option>
+    </select>
+  </div>
+  <div id="history">Loading...</div>
 </div>
 
-<div id="history">Loading…</div>
-
-</div>
-
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
-  authDomain: "g2-construction-commissi-35729.firebaseapp.com",
-  projectId: "g2-construction-commissi-35729"
-});
+const firebaseConfig = {
+    apiKey: "AIzaSyAfbryRypCrosHxxf3STmES7twq2fGVP1Y",
+    authDomain: "g2-construction-commissi-35729.firebaseapp.com",
+    projectId: "g2-construction-commissi-35729",
+    storageBucket: "g2-construction-commissi-35729.firebasestorage.app",
+    messagingSenderId: "347759839953",
+    appId: "1:347759839953:web:b2ec2e14aee7c47e8cd3f0"
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* ELEMENTS */
-const historyEl = document.getElementById("history");
-const filterJob = document.getElementById("filterJob");
-const filterProfile = document.getElementById("filterProfile");
-const filterYear = document.getElementById("filterYear");
-const filterQuarter = document.getElementById("filterQuarter");
+const profileSelect = document.getElementById('profileSelect');
+const jobEl = document.getElementById('jobName');
+const saleEl = document.getElementById('sale');
+const costEl = document.getElementById('cost');
+const resultsEl = document.getElementById('results');
+const historyEl = document.getElementById('history');
+const filterJobName = document.getElementById('filterJobName');
+const filterProfile = document.getElementById('filterProfile');
 
-let editId = null;
+let editingJobId = null;
 
-/* HELPERS */
-function getYearQuarter(ts){
-  const d = ts.toDate();
-  const year = d.getFullYear();
-  const m = d.getMonth()+1;
-  let q="Q1";
-  if(m>=4&&m<=6) q="Q2";
-  else if(m>=7&&m<=9) q="Q3";
-  else if(m>=10) q="Q4";
-  return {year, quarter:q};
-}
-
-/* COMMISSION — 40% OVER 20% */
-function calc(sale, cost){
-  sale = Number(sale)||0;
-  cost = Number(cost)||0;
-  const profit = Math.max(0, sale - cost);
-  const eligible = Math.max(0, profit - sale * 0.20);
-  return { profit, eligible, commission: eligible * 0.40 };
-}
-
-/* CALCULATE PREVIEW */
-calc.onclick = () => {
-  const r = calcFn();
-};
-
-document.getElementById("calc").onclick = () => {
-  const r = calc(sale.value, cost.value);
-  result.innerHTML =
-    `Profit: $${r.profit.toFixed(2)}<br>
-     Eligible: $${r.eligible.toFixed(2)}<br>
-     Commission: $${r.commission.toFixed(2)}`;
-};
-
-/* SAVE */
-document.getElementById("save").onclick = async () => {
-  if(!job.value.trim()) return alert("Enter job name");
-
-  const r = calc(sale.value, cost.value);
-  const data = {
-    profile: profile.value,
-    jobName: job.value.trim(),
-    sale: Number(sale.value)||0,
-    cost: Number(cost.value)||0,
-    ...r,
-    created: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  editId
-    ? await db.collection("jobs").doc(editId).set(data,{merge:true})
-    : await db.collection("jobs").add(data);
-
-  editId=null;
-  job.value=sale.value=cost.value="";
-  result.innerHTML="";
-};
-
-/* REAL-TIME LOAD */
-let allJobs = [];
-
-db.collection("jobs").onSnapshot(snap=>{
-  allJobs = [];
-  const years = new Set();
-
-  snap.forEach(doc=>{
-    const j = doc.data();
-    if(!j.created) return;
-    const yq = getYearQuarter(j.created);
-    years.add(yq.year);
-    allJobs.push({id:doc.id,...j,...yq});
-  });
-
-  filterYear.innerHTML =
-    '<option value="">All Years</option>' +
-    [...years].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
-
-  renderJobs();
+// Commission calculation
+document.getElementById('calcBtn').addEventListener('click', ()=>{
+    const sale = parseFloat(saleEl.value)||0;
+    const cost = parseFloat(costEl.value)||0;
+    const profit = sale-cost;
+    const threshold = sale*0.20;
+    const eligible = profit-threshold;
+    const commission = eligible>0?eligible*0.4:0;
+    resultsEl.innerHTML = `Profit: $${profit.toFixed(2)}<br>Eligible: $${eligible.toFixed(2)}<br>Commission: $${commission.toFixed(2)}`;
 });
 
-/* RENDER */
-function renderJobs(){
-  historyEl.innerHTML="";
-  if(!allJobs.length){ historyEl.textContent="No jobs"; return; }
+// Save job
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+    const profile = profileSelect.value==="ViewAll"?null:profileSelect.value;
+    if(!profile) return alert("Select David or Joseph to save a job.");
+    const jobName = jobEl.value.trim();
+    const sale = parseFloat(saleEl.value)||0;
+    const cost = parseFloat(costEl.value)||0;
+    if(!jobName) return alert("Enter job name.");
+    const profit = sale-cost;
+    const threshold = sale*0.20;
+    const eligible = profit-threshold;
+    const commission = eligible>0?eligible*0.4:0;
 
-  allJobs.forEach(j=>{
-    if(filterProfile.value && j.profile!==filterProfile.value) return;
-    if(filterYear.value && j.year.toString()!==filterYear.value) return;
-    if(filterQuarter.value && j.quarter!==filterQuarter.value) return;
-    if(filterJob.value &&
-       !j.jobName.toLowerCase().includes(filterJob.value.toLowerCase())) return;
+    const jobData = {profile, jobName, sale, cost, profit, threshold, eligible, commission, created: firebase.firestore.FieldValue.serverTimestamp()};
 
-    const div=document.createElement("div");
-    div.className="job";
-    div.dataset.id=j.id;
-    div.innerHTML=`
-      <div>
-        <b>${j.jobName}</b> (${j.profile})<br>
-        ${j.year} ${j.quarter}<br>
-        Sale: $${j.sale.toFixed(2)} |
-        Profit: $${j.profit.toFixed(2)} |
-        Commission: $${j.commission.toFixed(2)}
-      </div>
-      <div class="actions">
-        <button data-edit>Edit</button>
-        <button class="delete-btn" data-delete>Delete</button>
-      </div>`;
-    historyEl.appendChild(div);
-  });
+    try{
+        if(editingJobId){
+            await db.collection("jobs").doc(editingJobId).set(jobData);
+            editingJobId=null;
+        } else {
+            await db.collection("jobs").add(jobData);
+        }
+        jobEl.value=''; saleEl.value=''; costEl.value=''; resultsEl.textContent='';
+        loadJobs();
+    }catch(err){console.error(err); alert("Error saving job.");}
+});
+
+// Load jobs with totals
+async function loadJobs(){
+    historyEl.innerHTML="Loading...";
+    try{
+        let query = db.collection("jobs").orderBy("created","desc");
+        const snapshot = await query.get();
+        historyEl.innerHTML='';
+        if(snapshot.empty){ historyEl.textContent="No jobs yet."; return; }
+
+        const jobNameFilter = filterJobName.value.toLowerCase();
+        const profileFilterVal = filterProfile.value;
+        const selectedProfile = profileSelect.value;
+
+        let totalSales = 0;
+        let totalCommission = 0;
+        let totalProfit = 0;
+
+        snapshot.forEach(doc=>{
+            const j = doc.data();
+            j.id = doc.id;
+
+            // Filter logic
+            if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
+            if(jobNameFilter && !j.jobName.toLowerCase().includes(jobNameFilter)) return;
+            if(profileFilterVal && j.profile!==profileFilterVal) return;
+
+            totalSales += j.sale;
+            totalCommission += j.commission;
+            totalProfit += j.profit;
+
+            const div = document.createElement('div');
+            div.innerHTML = `<div><b>${j.jobName}</b> (${j.profile})<br>
+                Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}</div>
+                <div><button class="edit-btn">Edit</button><button class="delete-btn">Delete</button></div>`;
+            const [editBtn, delBtn] = div.querySelectorAll('button');
+            editBtn.addEventListener('click', ()=>{
+                editingJobId=doc.id;
+                jobEl.value=j.jobName; saleEl.value=j.sale; costEl.value=j.cost;
+                resultsEl.innerHTML=`Profit: $${j.profit.toFixed(2)}<br>Eligible: $${j.eligible.toFixed(2)}<br>Commission: $${j.commission.toFixed(2)}`;
+            });
+            delBtn.addEventListener('click', async ()=>{
+                if(confirm("Delete this job?")){
+                    await db.collection("jobs").doc(doc.id).delete();
+                    loadJobs();
+                }
+            });
+
+            historyEl.appendChild(div);
+        });
+
+        // Totals summary
+        const totalsDiv = document.createElement('div');
+        totalsDiv.style.fontWeight = 'bold';
+        totalsDiv.style.marginTop = '10px';
+        const profitAfterCommission = totalProfit - totalCommission;
+        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${profitAfterCommission.toFixed(2)}`;
+        historyEl.appendChild(totalsDiv);
+
+    }catch(err){
+        console.error(err);
+        historyEl.textContent="Error loading jobs. Check internet connection.";
+    }
 }
 
-/* EDIT / DELETE (EVENT DELEGATION) */
-historyEl.onclick = async e => {
-  const jobDiv = e.target.closest(".job");
-  if(!jobDiv) return;
-  const id = jobDiv.dataset.id;
+// Export CSV with totals
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+    let query = db.collection("jobs").orderBy("created","desc");
+    const snapshot = await query.get();
+    if(snapshot.empty) return alert("No jobs to export.");
 
-  if(e.target.dataset.edit!==undefined){
-    const d = await db.collection("jobs").doc(id).get();
-    const j = d.data();
-    editId=id;
-    job.value=j.jobName;
-    sale.value=j.sale;
-    cost.value=j.cost;
-    profile.value=j.profile;
-  }
+    const jobNameFilterVal = filterJobName.value.toLowerCase();
+    const profileFilterVal = filterProfile.value;
 
-  if(e.target.dataset.delete!==undefined){
-    if(confirm("Delete this job?")){
-      await db.collection("jobs").doc(id).delete();
-    }
-  }
-};
+    let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
+    let totalSales=0, totalCommission=0, totalProfit=0;
 
-/* FILTERS */
-filterJob.oninput = renderJobs;
-filterProfile.onchange = renderJobs;
-filterYear.onchange = renderJobs;
-filterQuarter.onchange = renderJobs;
+    snapshot.forEach(doc=>{
+        const j = doc.data();
+        if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
+        if(profileFilterVal && j.profile!==profileFilterVal) return;
+        csv+=`"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
+        totalSales += j.sale;
+        totalProfit += j.profit;
+        totalCommission += j.commission;
+    });
+
+    const profitAfterCommission = totalProfit - totalCommission;
+    csv += `Totals,,${totalSales.toFixed(2)},,${totalProfit.toFixed(2)},,${totalCommission.toFixed(2)}\n`;
+    csv += `Profit After Commission,,,,,,${profitAfterCommission.toFixed(2)}\n`;
+
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url; a.download="G2_Commission.csv"; a.click();
+    URL.revokeObjectURL(url);
+});
+
+filterJobName.addEventListener('input', loadJobs);
+filterProfile.addEventListener('change', loadJobs);
+profileSelect.addEventListener('change', loadJobs);
+
+// Initial load
+loadJobs();
 </script>
-
 </body>
 </html>
