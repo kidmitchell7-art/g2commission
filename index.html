@@ -6,8 +6,28 @@
 <title>G2 Construction Commission Tracker</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
-h1 { text-align:center; font-size:32px; margin-bottom:20px; }
-.header-letter { font-size:42px; font-weight:bold; color:blue; }
+.header {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+  background: linear-gradient(270deg, #007bff, #00d4ff, #28a745, #ffc107, #dc3545);
+  background-size: 1000% 1000%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientMove 15s ease infinite;
+}
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.header-letter {
+  font-size: 50px; /* bigger letters */
+  font-weight: bold;
+  display: inline-block;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
 label { display:block; margin-top:10px; font-weight:bold; }
 input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
@@ -16,7 +36,19 @@ button:hover { background:#0056b3; }
 .filter-container { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
 .filter-container input, .filter-container select { flex:1; min-width:120px; }
 #history { margin-top:15px; }
-.job { display:flex; justify-content:space-between; align-items:flex-start; background:#fff; padding:12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:12px; flex-wrap:wrap; }
+.job {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  background:#fff;
+  padding:12px;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom:12px;
+  flex-wrap:wrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.job:hover { transform: translateY(-4px); box-shadow:0 6px 15px rgba(0,0,0,0.15); }
 .job-left { flex:1; min-width:180px; }
 .job-actions { display:flex; gap:6px; margin-top:6px; }
 .edit-btn { background:#6c757d; color:white; }
@@ -33,7 +65,9 @@ button:hover { background:#0056b3; }
 </head>
 <body>
 
-<h1><span class="header-letter">G</span><span class="header-letter">2</span> Construction Commission Tracker</h1>
+<h1 class="header">
+  <span class="header-letter">G</span><span class="header-letter">2</span> Construction Commission Tracker
+</h1>
 
 <div class="container">
   <label>Profile:</label>
@@ -109,7 +143,6 @@ const filterQuarter = document.getElementById('filterQuarter');
 
 let editingJobId = null;
 
-// Helper: get year and quarter
 function getYearQuarter(ts){
   const d = ts.toDate();
   const y = d.getFullYear();
@@ -121,7 +154,6 @@ function getYearQuarter(ts){
   return {year:y, quarter:q};
 }
 
-// Commission calculation
 document.getElementById('calcBtn').addEventListener('click', ()=>{
     const sale = parseFloat(saleEl.value)||0;
     const cost = parseFloat(costEl.value)||0;
@@ -132,7 +164,6 @@ document.getElementById('calcBtn').addEventListener('click', ()=>{
     resultsEl.innerHTML = `Profit: $${profit.toFixed(2)}<br>Eligible: $${eligible.toFixed(2)}<br>Commission: $${commission.toFixed(2)}`;
 });
 
-// Save job
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const profile = profileSelect.value==="ViewAll"?null:profileSelect.value;
     if(!profile) return alert("Select David or Joseph to save a job.");
@@ -159,7 +190,6 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     }catch(err){console.error(err); alert("Error saving job.");}
 });
 
-// Load jobs with totals
 async function loadJobs(){
     historyEl.innerHTML="Loading...";
     try{
@@ -228,7 +258,6 @@ async function loadJobs(){
     }catch(err){ console.error(err); historyEl.textContent="Error loading jobs."; }
 }
 
-// Export CSV
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const snap = await db.collection("jobs").orderBy("created","desc").get();
     if(snap.empty) return alert("No jobs to export.");
@@ -253,14 +282,12 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     URL.revokeObjectURL(url);
 });
 
-// Filters
 filterJobName.addEventListener('input', loadJobs);
 filterProfile.addEventListener('change', loadJobs);
 filterYear.addEventListener('change', loadJobs);
 filterQuarter.addEventListener('change', loadJobs);
 profileSelect.addEventListener('change', loadJobs);
 
-// Initial load
 loadJobs();
 </script>
 </body>
