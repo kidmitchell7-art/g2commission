@@ -6,8 +6,8 @@
 <title>G2 Construction Commission Tracker</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
-h1 { text-align:center; font-size:28px; margin-bottom:20px; }
-h1 span { color:blue; }
+h1 { text-align:center; font-size:32px; margin-bottom:20px; }
+h1 span { color:blue; font-size:38px; font-weight:bold; }
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
 label { display:block; margin-top:10px; font-weight:bold; }
 input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
@@ -23,7 +23,11 @@ button:hover { background:#0056b3; }
 .edit-btn:hover { background:#5a6268; }
 .delete-btn { background:#dc3545; color:white; }
 .delete-btn:hover { background:#c82333; }
-.badge-quarter { display:inline-block; background:#17a2b8; color:white; font-size:0.85em; padding:2px 6px; border-radius:6px; margin-bottom:4px; }
+.badge-quarter { display:inline-block; font-size:0.85em; padding:2px 6px; border-radius:6px; margin-bottom:4px; color:white; }
+.badge-Q1 { background:#007bff; }  /* Blue */
+.badge-Q2 { background:#28a745; }  /* Green */
+.badge-Q3 { background:#ffc107; color:black; } /* Yellow */
+.badge-Q4 { background:#dc3545; }  /* Red */
 .totals { font-weight:bold; padding:12px; margin-top:12px; background:#f1f3f5; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
 </style>
 </head>
@@ -191,7 +195,7 @@ async function loadJobs(){
             div.innerHTML = `
                 <div class="job-left">
                   <b>${j.jobName}</b> (${j.profile})<br>
-                  <span class="badge-quarter">${quarter} ${year}</span><br>
+                  <span class="badge-quarter badge-${quarter}">${quarter} ${year}</span><br>
                   Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
                 </div>
                 <div class="job-actions">
