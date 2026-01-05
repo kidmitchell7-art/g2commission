@@ -7,7 +7,7 @@
 <style>
 body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
 h1 { text-align:center; font-size:32px; margin-bottom:20px; }
-h1 span { color:blue; font-size:38px; font-weight:bold; }
+.header-letter { font-size:42px; font-weight:bold; color:blue; }
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
 label { display:block; margin-top:10px; font-weight:bold; }
 input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
@@ -33,7 +33,7 @@ button:hover { background:#0056b3; }
 </head>
 <body>
 
-<h1>G<span>2</span> Construction Commission Tracker</h1>
+<h1><span class="header-letter">G</span><span class="header-letter">2</span> Construction Commission Tracker</h1>
 
 <div class="container">
   <label>Profile:</label>
@@ -81,7 +81,6 @@ button:hover { background:#0056b3; }
   <div id="history">Loading...</div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -110,7 +109,7 @@ const filterQuarter = document.getElementById('filterQuarter');
 
 let editingJobId = null;
 
-// Helper to get year and quarter
+// Helper: get year and quarter
 function getYearQuarter(ts){
   const d = ts.toDate();
   const y = d.getFullYear();
@@ -181,7 +180,6 @@ async function loadJobs(){
             const {year, quarter} = getYearQuarter(j.created);
             years.add(year);
 
-            // Filter logic
             if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
             if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
             if(profileFilterVal && j.profile!==profileFilterVal) return;
@@ -218,11 +216,9 @@ async function loadJobs(){
             historyEl.appendChild(div);
         });
 
-        // Populate Year filter dynamically
         filterYear.innerHTML='<option value="">All Years</option>'+
             [...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
 
-        // Totals summary at bottom
         const totalsDiv = document.createElement('div');
         totalsDiv.className="totals";
         const profitAfterCommission = totalProfit - totalCommission;
