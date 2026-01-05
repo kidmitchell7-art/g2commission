@@ -6,80 +6,38 @@
 <title>G2 Construction Commission Tracker</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
-.header {
-  text-align: center;
-  font-size: 32px;
-  margin-bottom: 20px;
-  letter-spacing: 1px;
-  font-weight: bold;
-  color: #007bff;
-  position: relative;
-}
-.header-letter {
-  font-size: 50px;
-  font-weight: bold;
-  display: inline-block;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-}
-.header::after {
-  content:"";
-  position:absolute;
-  bottom:-4px;
-  left:50%;
-  transform:translateX(-50%);
-  width:0;
-  height:4px;
-  background:#007bff;
-  border-radius:2px;
-  transition: width 0.4s;
-}
-.header:hover::after { width:60px; }
-.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
+h1 { text-align:center; font-size:36px; margin-bottom:20px; font-weight:bold; }
+h1 span { color:blue; font-size:36px; font-weight:bold; }
+.container { max-width:950px; margin:auto; background:white; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); }
 label { display:block; margin-top:10px; font-weight:bold; }
-input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
-button { background:#007bff; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:10px; transition: background 0.2s; }
+input, select, button { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
+button { background:#007bff; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:10px; transition:0.2s; }
 button:hover { background:#0056b3; }
-.filter-container { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-.filter-container input, .filter-container select { flex:1; min-width:120px; }
-#history { margin-top:15px; }
-.job {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  background:#fff;
-  padding:12px;
-  border-radius:8px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-  margin-bottom:12px;
-  flex-wrap:wrap;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.job:hover { transform: translateY(-4px); box-shadow:0 6px 15px rgba(0,0,0,0.15); }
-.job-left { flex:1; min-width:180px; }
-.job-actions { display:flex; gap:6px; margin-top:6px; }
-.edit-btn { background:#6c757d; color:white; }
+#history { margin-top:20px; }
+.job-card { background:white; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:15px; margin-bottom:15px; display:flex; justify-content:space-between; flex-wrap:wrap; }
+.job-card div { margin:5px 0; }
+.edit-btn, .delete-btn { margin-left:5px; padding:6px 12px; font-size:14px; }
+.delete-btn { background:#dc3545; }
 .edit-btn:hover { background:#5a6268; }
-.delete-btn { background:#dc3545; color:white; }
 .delete-btn:hover { background:#c82333; }
-.badge-quarter { display:inline-block; font-size:0.85em; padding:2px 6px; border-radius:6px; margin-bottom:4px; color:white; }
-.badge-Q1 { background:#007bff; }
-.badge-Q2 { background:#28a745; }
-.badge-Q3 { background:#ffc107; color:black; }
-.badge-Q4 { background:#dc3545; }
-.totals { font-weight:bold; padding:12px; margin-top:12px; background:#f1f3f5; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-.job.profile-David { background: #e7f1ff; }
-.job.profile-Joseph { background: #e9f7ef; }
+.filter-container { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.filter-container input, .filter-container select { flex:1; }
+.quarter-label { font-weight:bold; padding:2px 6px; border-radius:4px; color:white; margin-left:6px; font-size:14px; }
+.Q1 { background:#1abc9c; }
+.Q2 { background:#3498db; }
+.Q3 { background:#f39c12; }
+.Q4 { background:#e74c3c; }
+.totals { font-weight:bold; font-size:16px; margin-top:20px; }
 </style>
 </head>
 <body>
 
-<h1 class="header">
-  <span class="header-letter">G</span><span class="header-letter">2</span> Construction Commission Tracker
-</h1>
+<h1><span>G2</span> Construction Commission Tracker</h1>
 
 <div class="container">
   <label>Profile:</label>
   <select id="profileSelect">
+    <option value="ViewAll">View All</option>
     <option value="David">David</option>
     <option value="Joseph">Joseph</option>
   </select>
@@ -99,7 +57,7 @@ button:hover { background:#0056b3; }
   <button id="saveBtn">Save Job</button>
   <button id="exportBtn">Export CSV</button>
 
-  <h3>Job History (Filtered)</h3>
+  <h3>Job History</h3>
   <div class="filter-container">
     <input type="text" id="filterJobName" placeholder="Filter by Job Name">
     <select id="filterYear">
@@ -113,10 +71,11 @@ button:hover { background:#0056b3; }
       <option value="Q4">Q4 (Oct–Dec)</option>
     </select>
   </div>
-
   <div id="history">Loading...</div>
+  <div id="totals" class="totals"></div>
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -141,40 +100,45 @@ const historyEl = document.getElementById('history');
 const filterJobName = document.getElementById('filterJobName');
 const filterYear = document.getElementById('filterYear');
 const filterQuarter = document.getElementById('filterQuarter');
+const totalsEl = document.getElementById('totals');
 
 let editingJobId = null;
 
+// Helpers
 function getYearQuarter(ts){
-  const d = ts.toDate();
-  const y = d.getFullYear();
-  const m = d.getMonth()+1;
-  let q="Q1";
-  if(m>=4&&m<=6) q="Q2";
-  else if(m>=7&&m<=9) q="Q3";
-  else if(m>=10) q="Q4";
-  return {year:y, quarter:q};
+    const d = ts.toDate();
+    const year = d.getFullYear();
+    const month = d.getMonth()+1;
+    let quarter = "Q1";
+    if(month>=4&&month<=6) quarter="Q2";
+    else if(month>=7&&month<=9) quarter="Q3";
+    else if(month>=10) quarter="Q4";
+    return {year, quarter};
 }
 
+// Commission calc
 document.getElementById('calcBtn').addEventListener('click', ()=>{
     const sale = parseFloat(saleEl.value)||0;
     const cost = parseFloat(costEl.value)||0;
     const profit = sale-cost;
     const threshold = sale*0.20;
-    const eligible = profit-threshold;
-    const commission = eligible>0?eligible*0.4:0;
+    const eligible = Math.max(0, profit-threshold);
+    const commission = eligible*0.4;
     resultsEl.innerHTML = `Profit: $${profit.toFixed(2)}<br>Eligible: $${eligible.toFixed(2)}<br>Commission: $${commission.toFixed(2)}`;
 });
 
+// Save job
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const profile = profileSelect.value;
+    if(!profile || profile==="") return alert("Select a profile.");
     const jobName = jobEl.value.trim();
+    if(!jobName) return alert("Enter job name.");
     const sale = parseFloat(saleEl.value)||0;
     const cost = parseFloat(costEl.value)||0;
-    if(!jobName) return alert("Enter job name.");
     const profit = sale-cost;
     const threshold = sale*0.20;
-    const eligible = profit-threshold;
-    const commission = eligible>0?eligible*0.4:0;
+    const eligible = Math.max(0, profit-threshold);
+    const commission = eligible*0.4;
 
     const jobData = {profile, jobName, sale, cost, profit, threshold, eligible, commission, created: firebase.firestore.FieldValue.serverTimestamp()};
 
@@ -190,44 +154,51 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     }catch(err){console.error(err); alert("Error saving job.");}
 });
 
+// Load jobs
 async function loadJobs(){
     historyEl.innerHTML="Loading...";
+    totalsEl.textContent='';
     try{
-        const snap = await db.collection("jobs").orderBy("created","desc").get();
-        historyEl.innerHTML='';
-        if(snap.empty){ historyEl.textContent="No jobs yet."; return; }
+        const snapshot = await db.collection("jobs").orderBy("created","desc").get();
+        if(snapshot.empty){ historyEl.textContent="No jobs yet."; return; }
 
-        const jobNameFilterVal = filterJobName.value.toLowerCase();
         const selectedProfile = profileSelect.value;
+        const jobFilter = filterJobName.value.toLowerCase();
+        const yearFilter = filterYear.value;
+        const quarterFilter = filterQuarter.value;
 
+        let yearsSet = new Set();
         let totalSales=0, totalProfit=0, totalCommission=0;
-        const years = new Set();
 
-        snap.forEach(doc=>{
+        historyEl.innerHTML='';
+        snapshot.forEach(doc=>{
             const j = doc.data();
             if(!j.created) return;
             const {year, quarter} = getYearQuarter(j.created);
-            years.add(year);
+            yearsSet.add(year);
 
-            if(j.profile!==selectedProfile) return;
-            if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
-            if(filterYear.value && filterYear.value!==year.toString()) return;
-            if(filterQuarter.value && filterQuarter.value!==quarter) return;
+            if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
+            if(jobFilter && !j.jobName.toLowerCase().includes(jobFilter)) return;
+            if(yearFilter && year.toString()!==yearFilter) return;
+            if(quarterFilter && quarter!==quarterFilter) return;
 
-            totalSales+=j.sale; totalProfit+=j.profit; totalCommission+=j.commission;
+            totalSales += j.sale;
+            totalProfit += j.profit;
+            totalCommission += j.commission;
 
             const div = document.createElement('div');
-            div.className=`job profile-${j.profile}`;
+            div.className="job-card";
             div.innerHTML = `
-                <div class="job-left">
-                  <b>${j.jobName}</b> (${j.profile})<br>
-                  <span class="badge-quarter badge-${quarter}">${quarter} ${year}</span><br>
-                  Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+                <div>
+                    <b>${j.jobName}</b> (${j.profile})
+                    <span class="quarter-label ${quarter}">${quarter}</span><br>
+                    Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
                 </div>
-                <div class="job-actions">
-                  <button class="edit-btn">Edit</button>
-                  <button class="delete-btn">Delete</button>
-                </div>`;
+                <div>
+                    <button class="edit-btn">Edit</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
+            `;
             const [editBtn, delBtn] = div.querySelectorAll('button');
             editBtn.addEventListener('click', ()=>{
                 editingJobId=doc.id;
@@ -240,51 +211,65 @@ async function loadJobs(){
                     loadJobs();
                 }
             });
-
             historyEl.appendChild(div);
         });
 
-        filterYear.innerHTML='<option value="">All Years</option>'+
-            [...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+        // Populate year filter
+        filterYear.innerHTML='<option value="">All Years</option>'+[...yearsSet].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join('');
 
-        const totalsDiv = document.createElement('div');
-        totalsDiv.className="totals";
-        const profitAfterCommission = totalProfit - totalCommission;
-        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${profitAfterCommission.toFixed(2)}`;
-        historyEl.appendChild(totalsDiv);
+        totalsEl.textContent = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${(totalProfit-totalCommission).toFixed(2)}`;
 
-    }catch(err){ console.error(err); historyEl.textContent="Error loading jobs."; }
+    }catch(err){
+        console.error(err);
+        historyEl.textContent="Error loading jobs. Check internet connection.";
+    }
 }
 
+// Export CSV
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
-    const snap = await db.collection("jobs").orderBy("created","desc").get();
-    if(snap.empty) return alert("No jobs to export.");
+    const snapshot = await db.collection("jobs").orderBy("created","desc").get();
+    if(snapshot.empty) return alert("No jobs to export.");
+    const jobFilter = filterJobName.value.toLowerCase();
+    const yearFilter = filterYear.value;
+    const quarterFilter = filterQuarter.value;
+    const selectedProfile = profileSelect.value;
 
-    let csv = "Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
+    let csv="Job Name,Profile,Sale,Cost,Profit,Eligible,Commission\n";
     let totalSales=0, totalProfit=0, totalCommission=0;
 
-    snap.forEach(doc=>{
-        const j = doc.data();
+    snapshot.forEach(doc=>{
+        const j=doc.data();
+        if(!j.created) return;
+        const {year, quarter} = getYearQuarter(j.created);
+        if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
+        if(jobFilter && !j.jobName.toLowerCase().includes(jobFilter)) return;
+        if(yearFilter && year.toString()!==yearFilter) return;
+        if(quarterFilter && quarter!==quarterFilter) return;
+
         csv+=`"${j.jobName}","${j.profile}",${j.sale},${j.cost},${j.profit},${j.eligible},${j.commission}\n`;
-        totalSales+=j.sale; totalProfit+=j.profit; totalCommission+=j.commission;
+        totalSales += j.sale;
+        totalProfit += j.profit;
+        totalCommission += j.commission;
     });
 
-    const profitAfterCommission = totalProfit - totalCommission;
-    csv+=`Totals,,${totalSales.toFixed(2)},,${totalProfit.toFixed(2)},,${totalCommission.toFixed(2)}\n`;
-    csv+=`Profit After Commission,,,,,,${profitAfterCommission.toFixed(2)}\n`;
+    csv += `Totals,,${totalSales.toFixed(2)},,${totalProfit.toFixed(2)},,${totalCommission.toFixed(2)}\n`;
+    csv += `Profit After Commission,,,,,,${(totalProfit-totalCommission).toFixed(2)}\n`;
 
-    const blob = new Blob([csv], {type:"text/csv"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href=url; a.download="G2_Commission.csv"; a.click();
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="G2_Commission.csv";
+    a.click();
     URL.revokeObjectURL(url);
 });
 
+// Event listeners
 filterJobName.addEventListener('input', loadJobs);
 filterYear.addEventListener('change', loadJobs);
 filterQuarter.addEventListener('change', loadJobs);
 profileSelect.addEventListener('change', loadJobs);
 
+// Initial load
 loadJobs();
 </script>
 </body>
