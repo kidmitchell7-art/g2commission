@@ -6,8 +6,6 @@
 <title>G2 Construction Commission Tracker</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20px; }
-
-/* Header */
 .header {
   text-align: center;
   font-size: 32px;
@@ -15,16 +13,13 @@ body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20p
   letter-spacing: 1px;
   font-weight: bold;
   color: #007bff;
-  -webkit-text-fill-color: #007bff;  /* iOS fix */
-  -webkit-font-smoothing: antialiased;
   position: relative;
 }
 .header-letter {
-  font-size: 50px; 
+  font-size: 50px; /* bigger letters */
   font-weight: bold;
   display: inline-block;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-  -webkit-text-fill-color: #007bff;
 }
 .header::after {
   content:"";
@@ -39,27 +34,19 @@ body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20p
   transition: width 0.4s;
 }
 .header:hover::after { width:60px; }
-
-/* Container */
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
-
-/* Inputs/Buttons */
 label { display:block; margin-top:10px; font-weight:bold; }
 input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
 button { background:#007bff; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:10px; transition: background 0.2s; }
 button:hover { background:#0056b3; }
-
-/* Filters */
 .filter-container { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
 .filter-container input, .filter-container select { flex:1; min-width:120px; }
-
-/* Job cards */
 #history { margin-top:15px; }
 .job {
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
-  background:#fff;
+  background:#f9f9f9;
   padding:12px;
   border-radius:8px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
@@ -74,21 +61,16 @@ button:hover { background:#0056b3; }
 .edit-btn:hover { background:#5a6268; }
 .delete-btn { background:#dc3545; color:white; }
 .delete-btn:hover { background:#c82333; }
-
-/* Badges for quarters */
 .badge-quarter { display:inline-block; font-size:0.85em; padding:2px 6px; border-radius:6px; margin-bottom:4px; color:white; }
 .badge-Q1 { background:#007bff; }  /* Blue */
 .badge-Q2 { background:#28a745; }  /* Green */
 .badge-Q3 { background:#ffc107; color:black; } /* Yellow */
 .badge-Q4 { background:#dc3545; }  /* Red */
-
-/* Totals */
 .totals { font-weight:bold; padding:12px; margin-top:12px; background:#f1f3f5; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
 
-/* Profile-based card background (fixed for iPhone) */
-.job.profile-David { background-color: #e7f1ff !important; }
-.job.profile-Joseph { background-color: #e9f7ef !important; }
-
+/* Optional: profile-based card background */
+.job.profile-David { background: #e7f1ff; }
+.job.profile-Joseph { background: #e9f7ef; }
 </style>
 </head>
 <body>
@@ -124,7 +106,6 @@ button:hover { background:#0056b3; }
   <div class="filter-container">
     <input type="text" id="filterJobName" placeholder="Filter by Job Name">
     <select id="filterProfile">
-      <option value="">All Profiles</option>
       <option value="David">David</option>
       <option value="Joseph">Joseph</option>
     </select>
