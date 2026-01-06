@@ -33,9 +33,7 @@ body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:20p
   border-radius:2px;
   transition: width 0.4s;
 }
-.header:hover::after {
-  width:60px; /* underline animates on hover */
-}
+.header:hover::after { width:60px; }
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
 label { display:block; margin-top:10px; font-weight:bold; }
 input, select, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
@@ -69,8 +67,6 @@ button:hover { background:#0056b3; }
 .badge-Q3 { background:#ffc107; color:black; } /* Yellow */
 .badge-Q4 { background:#dc3545; }  /* Red */
 .totals { font-weight:bold; padding:12px; margin-top:12px; background:#f1f3f5; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-
-/* Optional: profile-based card background */
 .job.profile-David { background: #e7f1ff; }
 .job.profile-Joseph { background: #e9f7ef; }
 </style>
@@ -84,9 +80,9 @@ button:hover { background:#0056b3; }
 <div class="container">
   <label>Profile:</label>
   <select id="profileSelect">
+    <option value="ViewAll">View All</option>
     <option value="David">David</option>
     <option value="Joseph">Joseph</option>
-    <option value="ViewAll">View All</option>
   </select>
 
   <label>Job Name:</label>
@@ -107,11 +103,7 @@ button:hover { background:#0056b3; }
   <h3>Job History (Filtered)</h3>
   <div class="filter-container">
     <input type="text" id="filterJobName" placeholder="Filter by Job Name">
-    <select id="filterProfile">
-      <option value="">All Profiles</option>
-      <option value="David">David</option>
-      <option value="Joseph">Joseph</option>
-    </select>
+    <!-- Removed redundant all-profiles dropdown -->
     <select id="filterYear">
       <option value="">All Years</option>
     </select>
@@ -149,7 +141,6 @@ const costEl = document.getElementById('cost');
 const resultsEl = document.getElementById('results');
 const historyEl = document.getElementById('history');
 const filterJobName = document.getElementById('filterJobName');
-const filterProfile = document.getElementById('filterProfile');
 const filterYear = document.getElementById('filterYear');
 const filterQuarter = document.getElementById('filterQuarter');
 
@@ -209,8 +200,7 @@ async function loadJobs(){
         historyEl.innerHTML='';
         if(snap.empty){ historyEl.textContent="No jobs yet."; return; }
 
-        const jobNameFilterVal = filterJobName.value.toLowerCase();
-        const profileFilterVal = filterProfile.value;
+        const jobFilter = filterJobName.value.toLowerCase();
         const selectedProfile = profileSelect.value;
 
         let totalSales=0, totalProfit=0, totalCommission=0;
@@ -223,8 +213,7 @@ async function loadJobs(){
             years.add(year);
 
             if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
-            if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
-            if(profileFilterVal && j.profile!==profileFilterVal) return;
+            if(jobFilter && !j.jobName.toLowerCase().includes(jobFilter)) return;
             if(filterYear.value && filterYear.value!==year.toString()) return;
             if(filterQuarter.value && filterQuarter.value!==quarter) return;
 
@@ -295,7 +284,6 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
 });
 
 filterJobName.addEventListener('input', loadJobs);
-filterProfile.addEventListener('change', loadJobs);
 filterYear.addEventListener('change', loadJobs);
 filterQuarter.addEventListener('change', loadJobs);
 profileSelect.addEventListener('change', loadJobs);
