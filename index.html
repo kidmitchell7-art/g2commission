@@ -72,12 +72,12 @@ button:hover { background:#0056b3; }
 .job.profile-David { background: #e7f1ff; }
 .job.profile-Joseph { background: #e9f7ef; }
 
-/* 🔥 ADDED ONLY — fireworks canvas */
-#fireworks-canvas {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
+/* 🔥 ADDED ONLY: fireworks canvas */
+#fireworks-canvas{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9999;
 }
 </style>
 </head>
@@ -203,58 +203,114 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     }catch(err){console.error(err); alert("Error saving job.");}
 });
 
-/* 🔥 ADDED ONLY — high visibility rockets + fireworks */
+async function loadJobs(){
+    historyEl.innerHTML="Loading...";
+    try{
+        const snap = await db.collection("jobs").orderBy("created","desc").get();
+        historyEl.innerHTML='';
+        if(snap.empty){ historyEl.textContent="No jobs yet."; return; }
+
+        const jobNameFilterVal = filterJobName.value.toLowerCase();
+        const selectedProfile = profileSelect.value;
+
+        let totalSales=0, totalProfit=0, totalCommission=0;
+        const years = new Set();
+
+        snap.forEach(doc=>{
+            const j = doc.data();
+            if(!j.created) return;
+            const {year, quarter} = getYearQuarter(j.created);
+            years.add(year);
+
+            if(selectedProfile!=="ViewAll" && j.profile!==selectedProfile) return;
+            if(jobNameFilterVal && !j.jobName.toLowerCase().includes(jobNameFilterVal)) return;
+            if(filterYear.value && filterYear.value!==year.toString()) return;
+            if(filterQuarter.value && filterQuarter.value!==quarter) return;
+
+            totalSales+=j.sale; totalProfit+=j.profit; totalCommission+=j.commission;
+
+            const div = document.createElement('div');
+            div.className=`job profile-${j.profile}`;
+            div.innerHTML = `
+                <div class="job-left">
+                  <b>${j.jobName}</b> (${j.profile})<br>
+                  <span class="badge-quarter badge-${quarter}">${quarter} ${year}</span><br>
+                  Sale: $${j.sale.toFixed(2)} | Cost: $${j.cost.toFixed(2)} | Profit: $${j.profit.toFixed(2)} | Commission: $${j.commission.toFixed(2)}
+                </div>
+                <div class="job-actions">
+                  <button class="edit-btn">Edit</button>
+                  <button class="delete-btn">Delete</button>
+                </div>`;
+            const [editBtn, delBtn] = div.querySelectorAll('button');
+            editBtn.addEventListener('click', ()=>{
+                editingJobId=doc.id;
+                jobEl.value=j.jobName; saleEl.value=j.sale; costEl.value=j.cost;
+                resultsEl.innerHTML=`Profit: $${j.profit.toFixed(2)}<br>Eligible: $${j.eligible.toFixed(2)}<br>Commission: $${j.commission.toFixed(2)}`;
+            });
+            delBtn.addEventListener('click', async ()=>{
+                if(confirm("Delete this job?")){
+                    await db.collection("jobs").doc(doc.id).delete();
+                    loadJobs();
+                }
+            });
+
+            historyEl.appendChild(div);
+        });
+
+        filterYear.innerHTML='<option value="">All Years</option>'+
+            [...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+
+        const totalsDiv = document.createElement('div');
+        totalsDiv.className="totals";
+        const profitAfterCommission = totalProfit - totalCommission;
+        totalsDiv.innerHTML = `Total Sales: $${totalSales.toFixed(2)} | Total Profit: $${totalProfit.toFixed(2)} | Total Commission: $${totalCommission.toFixed(2)} | Profit After Commission: $${profitAfterCommission.toFixed(2)}`;
+        historyEl.appendChild(totalsDiv);
+
+    }catch(err){ console.error(err); historyEl.textContent="Error loading jobs."; }
+}
+
+/* 🔥 ADDED ONLY: visible rocket + fireworks */
 function launchFireworks(){
-  const canvas=document.createElement("canvas");
-  canvas.id="fireworks-canvas";
-  document.body.appendChild(canvas);
-  const ctx=canvas.getContext("2d");
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
-
-  const rockets=[],particles=[];
-  const colors=["#ff1744","#ffea00","#00e676","#2979ff","#d500f9","#ff9100"];
-  const gravity=0.08;
-  let launches=0,maxLaunches=7;
-
-  const timer=setInterval(()=>{
-    rockets.push({x:Math.random()*canvas.width*0.6+canvas.width*0.2,y:canvas.height,vy:-(Math.random()*7+9)});
-    if(++launches>=maxLaunches) clearInterval(timer);
-  },500);
-
-  function explode(x,y){
-    for(let i=0;i<220;i++){
-      const a=Math.random()*Math.PI*2,s=Math.random()*7+4;
-      particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:120,size:Math.random()*3+2,color:colors[Math.random()*colors.length|0]});
-    }
-  }
-
-  (function animate(){
-    ctx.fillStyle="rgba(0,0,0,0.25)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    rockets.forEach((r,i)=>{
-      r.y+=r.vy;
-      ctx.shadowBlur=20;ctx.shadowColor="#fff";
-      ctx.fillStyle="#fff";ctx.fillRect(r.x-2,r.y,4,14);
-      if(r.y<canvas.height*0.35){explode(r.x,r.y);rockets.splice(i,1);}
+  const c=document.createElement("canvas");
+  c.id="fireworks-canvas";
+  document.body.appendChild(c);
+  const x=c.getContext("2d");
+  c.width=innerWidth; c.height=innerHeight;
+  const r=[],p=[],clr=["#ff1744","#ffea00","#00e676","#2979ff","#d500f9"];
+  let n=0;
+  const t=setInterval(()=>{
+    r.push({x:Math.random()*c.width*0.6+c.width*0.2,y:c.height,v:-12});
+    if(++n>=6) clearInterval(t);
+  },450);
+  (function a(){
+    x.fillStyle="rgba(0,0,0,.25)";
+    x.fillRect(0,0,c.width,c.height);
+    r.forEach((o,i)=>{
+      o.y+=o.v;
+      x.shadowBlur=25; x.shadowColor="#fff";
+      x.fillStyle="#fff"; x.fillRect(o.x-2,o.y,4,16);
+      if(o.y<c.height*.35){
+        for(let j=0;j<220;j++){
+          const A=Math.random()*6.28,S=Math.random()*8+4;
+          p.push({x:o.x,y:o.y,vx:Math.cos(A)*S,vy:Math.sin(A)*S,l:120,c:clr[Math.random()*clr.length|0]});
+        }
+        r.splice(i,1);
+      }
     });
-
-    particles.forEach((p,i)=>{
-      p.vy+=gravity;p.x+=p.vx;p.y+=p.vy;p.life--;
-      ctx.beginPath();ctx.shadowBlur=25;ctx.shadowColor=p.color;
-      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-      ctx.fillStyle=p.color;ctx.fill();
-      if(p.life<=0) particles.splice(i,1);
+    p.forEach((o,i)=>{
+      o.vy+=.08; o.x+=o.vx; o.y+=o.vy; o.l--;
+      x.beginPath(); x.shadowBlur=30; x.shadowColor=o.c;
+      x.arc(o.x,o.y,3,0,6.28); x.fillStyle=o.c; x.fill();
+      if(o.l<=0) p.splice(i,1);
     });
-
-    (particles.length||rockets.length||launches<maxLaunches)?requestAnimationFrame(animate):canvas.remove();
+    (p.length||r.length||n<6)?requestAnimationFrame(a):c.remove();
   })();
 }
 
-async function loadJobs(){
-  /* unchanged */
-}
+filterJobName.addEventListener('input', loadJobs);
+filterYear.addEventListener('change', loadJobs);
+filterQuarter.addEventListener('change', loadJobs);
+profileSelect.addEventListener('change', loadJobs);
 
 loadJobs();
 </script>
