@@ -70,7 +70,7 @@ button:hover { background:#0056b3; }
 
 /* profile-based card background */
 .job.profile-David { background: #e7f1ff; }
-.job.profile-Joseph { background: #e9f7ef; }
+.job.profile-Pat { background: #e9f7ef; }
 </style>
 </head>
 <body>
@@ -83,7 +83,7 @@ button:hover { background:#0056b3; }
   <label>Profile:</label>
   <select id="profileSelect">
     <option value="David">David</option>
-    <option value="Joseph">Joseph</option>
+    <option value="Pat">Pat</option>
     <option value="ViewAll">View All</option>
   </select>
 
@@ -170,7 +170,7 @@ document.getElementById('calcBtn').addEventListener('click', ()=>{
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const profile = profileSelect.value==="ViewAll"?null:profileSelect.value;
-    if(!profile) return alert("Select David or Joseph to save a job.");
+    if(!profile) return alert("Select David or Pat to save a job.");
     const jobName = jobEl.value.trim();
     const sale = parseFloat(saleEl.value)||0;
     const cost = parseFloat(costEl.value)||0;
